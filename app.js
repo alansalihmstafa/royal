@@ -66,8 +66,9 @@ function renderApps(apps) {
 
             <a
                 class="download-btn"
-                href="${escapeHtml(app.downloadUrl)}"
+                href="${sanitizeUrl(app.downloadUrl)}"
                 target="_blank"
+                rel="noopener noreferrer"
             >
                 Download ${escapeHtml(app.name)}
             </a>
@@ -101,6 +102,12 @@ function renderUpdates(apps) {
 
         updatesBox.appendChild(update);
     });
+}
+
+function sanitizeUrl(url) {
+    const str = String(url || "");
+    if (/^https?:\/\//i.test(str)) return escapeHtml(str);
+    return "";
 }
 
 function escapeHtml(text) {
