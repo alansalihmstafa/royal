@@ -3,173 +3,92 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Royal</title>
-
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
-    <header class="navbar">
-        <div class="logo">ROYAL</div>
+<header class="navbar">
+    <div class="logo">ROYAL</div>
 
-        <input
-            type="text"
-            id="searchBar"
-            placeholder="Search apps..."
-            autocomplete="off"
-        />
-    </header>
+    <input
+        type="text"
+        id="searchBar"
+        placeholder="Search apps..."
+        autocomplete="off"
+    />
+</header>
 
-    <section class="hero">
-        <div class="glow-circle"></div>
+<section class="hero">
+    <div class="glow-circle"></div>
 
-        <h1>Royal</h1>
+    <h1>Royal</h1>
 
-        <p>
-            Premium desktop applications, tools, and software downloads.
-        </p>
+    <p>
+        Premium desktop applications, tools, and software downloads.
+    </p>
 
-        <a href="#apps" class="hero-btn">
-            Explore Apps
+    <a href="#apps" class="hero-btn">
+        Explore Apps
+    </a>
+</section>
+
+<section class="section" id="apps">
+    <div class="section-title">
+        <h2>Featured Applications</h2>
+        <p>Download the latest Royal desktop apps.</p>
+    </div>
+
+    <div class="apps-grid" id="appsGrid">
+        <div class="empty-box">Loading apps...</div>
+    </div>
+</section>
+
+<section class="section updates">
+    <div class="section-title">
+        <h2>Latest Updates</h2>
+        <p>Royal release news and app updates.</p>
+    </div>
+
+    <div class="updates-box" id="updatesBox"></div>
+</section>
+
+<section class="section contact">
+    <div class="section-title">
+        <h2>Contact</h2>
+        <p>Contact Royal for support or updates.</p>
+    </div>
+
+    <div class="contact-buttons">
+        <a href="https://wa.me/" target="_blank" class="contact-btn">
+            WhatsApp
         </a>
-    </section>
 
-    <section class="section" id="apps">
-        <div class="section-title">
-            <h2>Featured Applications</h2>
-            <p>Download the latest Royal apps directly from here.</p>
-        </div>
+        <a href="https://discord.com/" target="_blank" class="contact-btn">
+            Discord
+        </a>
 
-        <div class="apps-grid">
+        <a href="https://github.com/alansalihmstafa/royal" target="_blank" class="contact-btn">
+            GitHub
+        </a>
+    </div>
 
-            <div class="app-card">
-                <div class="app-icon">♟</div>
+    <form class="contact-form" id="contactForm">
+        <input type="text" placeholder="Your name" required />
+        <input type="email" placeholder="Your email" required />
+        <textarea placeholder="Your message" required></textarea>
 
-                <h3>ChessBot</h3>
+        <button type="submit">
+            Send Message
+        </button>
+    </form>
+</section>
 
-                <p>
-                    Advanced chess assistant application for desktop.
-                </p>
+<footer>
+    <p>© 2026 Royal. All rights reserved.</p>
+</footer>
 
-                <div class="app-info">
-                    <span>Version: 1.0.0</span>
-                    <span>Setup: EXE</span>
-                </div>
-
-                <a
-                    class="download-btn"
-                    href="https://github.com/alansalihmstafa/royal/releases/download/version/ChessBot_Installer.exe"
-                >
-                    Download ChessBot
-                </a>
-            </div>
-
-            <div class="app-card">
-                <div class="app-icon">⚙</div>
-
-                <h3>Coming Soon</h3>
-
-                <p>
-                    New Royal application will be published soon.
-                </p>
-
-                <div class="app-info">
-                    <span>Version: Soon</span>
-                    <span>Status: Waiting</span>
-                </div>
-
-                <button class="download-btn disabled" disabled>
-                    Coming Soon
-                </button>
-            </div>
-
-            <div class="app-card">
-                <div class="app-icon">🚀</div>
-
-                <h3>Royal Launcher</h3>
-
-                <p>
-                    Future launcher for managing all Royal desktop apps.
-                </p>
-
-                <div class="app-info">
-                    <span>Version: Soon</span>
-                    <span>Status: Planned</span>
-                </div>
-
-                <button class="download-btn disabled" disabled>
-                    Coming Soon
-                </button>
-            </div>
-
-        </div>
-    </section>
-
-    <section class="section updates">
-        <div class="section-title">
-            <h2>Latest Updates</h2>
-            <p>News and release notes for Royal applications.</p>
-        </div>
-
-        <div class="updates-box">
-            <div class="update-card">
-                <h3>ChessBot Installer Published</h3>
-                <p>
-                    ChessBot setup is now available for direct download.
-                </p>
-            </div>
-
-            <div class="update-card">
-                <h3>Royal Website Online</h3>
-                <p>
-                    Royal is now ready for hosting on Netlify.
-                </p>
-            </div>
-        </div>
-    </section>
-
-    <section class="section contact">
-        <div class="section-title">
-            <h2>Contact</h2>
-            <p>Contact Royal for help, updates, or support.</p>
-        </div>
-
-        <div class="contact-buttons">
-            <a
-                href="https://wa.me/"
-                target="_blank"
-                class="contact-btn"
-            >
-                WhatsApp
-            </a>
-
-            <a
-                href="https://discord.com/"
-                target="_blank"
-                class="contact-btn"
-            >
-                Discord
-            </a>
-        </div>
-
-        <form class="contact-form" id="contactForm">
-            <input type="text" placeholder="Your name" required />
-            <input type="email" placeholder="Your email" required />
-            <textarea placeholder="Your message" required></textarea>
-
-            <button type="submit">
-                Send Message
-            </button>
-        </form>
-    </section>
-
-    <footer>
-        <p>© 2026 Royal. All rights reserved.</p>
-        <p class="small-text">Type @admin in search to open hidden admin page.</p>
-    </footer>
-
-    <script src="app.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
