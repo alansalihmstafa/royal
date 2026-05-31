@@ -3,29 +3,60 @@ const appsGrid = document.getElementById("appsGrid");
 const updatesBox = document.getElementById("updatesBox");
 const contactForm = document.getElementById("contactForm");
 
+const STORAGE_KEY = "royalApps";
+
 let allApps = [];
 
+function readLocalApps() {
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        return Array.isArray(parsed) ? parsed : null;
+    } catch (error) {
+        return null;
+    }
+}
+
+// Loads the app list with graceful fallbacks so the site works on any host:
+// 1. Optional Netlify function (shared, persistent storage)
+// 2. Apps saved locally by the admin panel in this browser
+// 3. The static apps.json bundled with the site
 async function loadApps() {
+    const local = readLocalApps();
+
     try {
         const response = await fetch("/api/apps");
-        const data = await response.json();
-
-        if (!data.success) {
-            throw new Error(data.message || "Failed to load apps");
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.success && Array.isArray(data.apps)) {
+                allApps = data.apps;
+                renderApps(allApps);
+                renderUpdates(allApps);
+                return;
+            }
         }
+    } catch (error) {
+        // No backend available, fall through to static sources.
+    }
 
-        allApps = data.apps || [];
-
+    if (local && local.length > 0) {
+        allApps = local;
         renderApps(allApps);
         renderUpdates(allApps);
-
-    } catch (error) {
-        appsGrid.innerHTML = `
-            <div class="empty-box">
-                Failed to load apps. Make sure the site is deployed on Netlify.
-            </div>
-        `;
+        return;
     }
+
+    try {
+        const response = await fetch("apps.json", { cache: "no-store" });
+        const data = await response.json();
+        allApps = (data && data.apps) || [];
+    } catch (error) {
+        allApps = [];
+    }
+
+    renderApps(allApps);
+    renderUpdates(allApps);
 }
 
 function renderApps(apps) {

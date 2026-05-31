@@ -246,7 +246,8 @@
         <div class="error" id="loginError"></div>
 
         <p class="small">
-            Password is checked by Netlify Function, not stored in this file.
+            Local admin passcode (default <b>royal</b>). This panel manages the app
+            list in your browser; use Export to publish changes to everyone.
         </p>
     </div>
 </div>
@@ -273,7 +274,8 @@
     <div class="container">
         <div class="warning">
             Create your EXE on GitHub Releases, copy the direct download link, paste it here, then click Publish.
-            The app list saves permanently to Netlify Blobs.
+            Apps are saved in this browser. Click <b>Export apps.json</b> and commit the file to publish
+            changes to every visitor.
         </div>
 
         <div class="layout">
@@ -311,6 +313,15 @@
             <div class="preview">
                 <h2>Live Apps</h2>
 
+                <div style="margin-bottom:18px;">
+                    <button class="dark-btn" onclick="exportApps()" style="margin:0;">
+                        Export apps.json
+                    </button>
+                    <button class="dark-btn" onclick="copyApps()" style="margin:0;">
+                        Copy JSON
+                    </button>
+                </div>
+
                 <div class="apps-list" id="appsList">
                     Loading apps...
                 </div>
@@ -326,79 +337,74 @@
     const successMessage = document.getElementById("successMessage");
     const errorMessage = document.getElementById("errorMessage");
 
+    const STORAGE_KEY = "royalApps";
+    const ADMIN_PASSCODE = "royal";
+
     let apps = [];
-    let adminPassword = sessionStorage.getItem("royalAdminPassword") || "";
 
     function showMessage(success, message) {
         successMessage.textContent = success ? message : "";
         errorMessage.textContent = success ? "" : message;
     }
 
-    async function login() {
+    function persist() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(apps));
+    }
+
+    function login() {
         const password = document.getElementById("adminPassword").value.trim();
 
         if (!password) {
-            loginError.textContent = "Enter admin password";
+            loginError.textContent = "Enter admin passcode";
             return;
         }
 
-        try {
-            const response = await fetch("/api/apps", {
-                method: "GET",
-                headers: {
-                    "x-admin-password": password
-                }
-            });
-
-            if (!response.ok && response.status === 401) {
-                loginError.textContent = "Wrong admin password";
-                return;
-            }
-
-            adminPassword = password;
-            sessionStorage.setItem("royalAdminPassword", password);
-
-            loginScreen.style.display = "none";
-            dashboard.style.display = "block";
-
-            await loadApps();
-
-        } catch (error) {
-            loginError.textContent = "Login failed. Deploy on Netlify first.";
+        if (password !== ADMIN_PASSCODE) {
+            loginError.textContent = "Wrong admin passcode";
+            return;
         }
+
+        loginError.textContent = "";
+        sessionStorage.setItem("royalAdmin", "1");
+
+        loginScreen.style.display = "none";
+        dashboard.style.display = "block";
+
+        loadApps();
     }
 
     function logout() {
-        sessionStorage.removeItem("royalAdminPassword");
-        adminPassword = "";
+        sessionStorage.removeItem("royalAdmin");
         dashboard.style.display = "none";
         loginScreen.style.display = "flex";
     }
 
     async function loadApps() {
         try {
-            const response = await fetch("/api/apps");
-            const data = await response.json();
+            const raw = localStorage.getItem(STORAGE_KEY);
 
-            if (!data.success) {
-                throw new Error(data.message || "Failed to load apps");
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                apps = Array.isArray(parsed) ? parsed : [];
+            } else {
+                const response = await fetch("apps.json", { cache: "no-store" });
+                const data = await response.json();
+                apps = (data && data.apps) || [];
+                persist();
             }
 
-            apps = data.apps || [];
             renderApps();
 
         } catch (error) {
-            document.getElementById("appsList").innerHTML = `
-                <p class="small">Failed to load apps.</p>
-            `;
+            apps = [];
+            renderApps();
         }
     }
 
-    async function saveApp() {
+    function saveApp() {
         const editId = document.getElementById("editId").value;
 
         const payload = {
-            id: editId,
             name: document.getElementById("appName").value.trim(),
             version: document.getElementById("appVersion").value.trim(),
             icon: document.getElementById("appIcon").value.trim(),
@@ -413,32 +419,21 @@
             return;
         }
 
-        try {
-            const response = await fetch("/api/apps", {
-                method: editId ? "PUT" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-admin-password": adminPassword
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || "Save failed");
+        if (editId) {
+            const index = apps.findIndex(item => item.id === editId);
+            if (index !== -1) {
+                apps[index] = Object.assign({}, apps[index], payload, { id: editId });
             }
-
-            apps = data.apps || apps;
-
-            clearForm();
-            await loadApps();
-
-            showMessage(true, editId ? "App updated live." : "App published live.");
-
-        } catch (error) {
-            showMessage(false, error.message);
+        } else {
+            payload.id = "app-" + Date.now().toString(36);
+            apps.push(payload);
         }
+
+        persist();
+        clearForm();
+        renderApps();
+
+        showMessage(true, editId ? "App updated." : "App published.");
     }
 
     function editApp(id) {
@@ -462,34 +457,42 @@
         });
     }
 
-    async function deleteApp(id) {
-        const ok = confirm("Delete this app from the live website?");
+    function deleteApp(id) {
+        const ok = confirm("Delete this app from the website?");
 
         if (!ok) return;
 
+        apps = apps.filter(item => item.id !== id);
+        persist();
+        renderApps();
+
+        showMessage(true, "App deleted.");
+    }
+
+    function appsJsonText() {
+        return JSON.stringify({ apps }, null, 2);
+    }
+
+    function exportApps() {
+        const blob = new Blob([appsJsonText()], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "apps.json";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        showMessage(true, "Downloaded apps.json. Commit it to publish to everyone.");
+    }
+
+    async function copyApps() {
         try {
-            const response = await fetch("/api/apps", {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-admin-password": adminPassword
-                },
-                body: JSON.stringify({ id })
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || "Delete failed");
-            }
-
-            apps = data.apps || [];
-            renderApps();
-
-            showMessage(true, "App deleted live.");
-
+            await navigator.clipboard.writeText(appsJsonText());
+            showMessage(true, "apps.json copied to clipboard.");
         } catch (error) {
-            showMessage(false, error.message);
+            showMessage(false, "Could not copy. Use Export instead.");
         }
     }
 
@@ -562,7 +565,7 @@
             .replaceAll("'", "&#039;");
     }
 
-    if (adminPassword) {
+    if (sessionStorage.getItem("royalAdmin") === "1") {
         loginScreen.style.display = "none";
         dashboard.style.display = "block";
         loadApps();
