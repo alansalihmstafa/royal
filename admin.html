@@ -164,6 +164,17 @@
         .file-btn input { display: none; }
         .remove-img { font-size: 12px; color: #fca5a5; cursor: pointer; margin-left: 10px; background: none; border: none; padding: 0; }
 
+        .shot-thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+        .shot-thumb { position: relative; width: 84px; height: 84px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.04); }
+        .shot-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .shot-x {
+            position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0;
+            border-radius: 50%; border: none; background: rgba(10,10,16,0.8); color: #fff;
+            font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .shot-x:hover { background: #ef4444; transform: none; }
+        .shot-empty { font-size: 13px; color: var(--muted); }
+
         .row { display: flex; gap: 12px; }
         .row > * { flex: 1; }
 
@@ -289,6 +300,18 @@
                     <label class="field-label">Description</label>
                     <textarea id="appDescription" placeholder="What does this app do?"></textarea>
 
+                    <label class="field-label">Screenshots / demo images (choose one or more from your device)</label>
+                    <div class="uploader-actions" style="margin-bottom:10px;">
+                        <label class="file-btn">
+                            Choose screenshots
+                            <input type="file" accept="image/*" multiple onchange="handleScreens(event)" />
+                        </label>
+                    </div>
+                    <div class="shot-thumbs" id="shotThumbs"><span class="shot-empty">No screenshots added yet.</span></div>
+
+                    <label class="field-label">Trailer / demo video link (YouTube, Vimeo, or .mp4)</label>
+                    <input id="appTrailer" placeholder="https://youtu.be/..." />
+
                     <label class="field-label">Release notes</label>
                     <textarea id="appNotes" placeholder="What's new in this version?"></textarea>
 
@@ -339,6 +362,9 @@
                         </div>
                     </div>
 
+                    <label class="field-label">Discord invite link (Contact button)</label>
+                    <input id="setDiscord" placeholder="https://discord.gg/QpmxAKQrD" />
+
                     <label class="field-label">Footer text</label>
                     <input id="setFooter" placeholder="© 2026 Royal. All rights reserved." />
 
@@ -380,13 +406,15 @@
         tagline: "Premium desktop applications, tools, and software downloads.",
         accent: "#7c5cff",
         carouselInterval: 5,
-        footer: "© 2026 Royal. All rights reserved."
+        footer: "© 2026 Royal. All rights reserved.",
+        discord: "https://discord.gg/QpmxAKQrD"
     };
 
     let apps = [];
     let settings = Object.assign({}, DEFAULT_SETTINGS);
     let iconData = "";   // data URL for app icon
     let bannerData = ""; // data URL for carousel banner
+    let screenshotData = []; // array of data URLs for app screenshots
 
     /* ---------- helpers ---------- */
     function escapeHtml(text) {
@@ -475,6 +503,54 @@
         else { iconData = ""; setThumb("iconThumb", ""); }
     }
 
+    /* ---------- screenshots (multiple) ---------- */
+    function handleScreens(event) {
+        const files = Array.from(event.target.files || []);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const maxDim = 1400;
+                    let w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                        else { w = Math.round(w * maxDim / h); h = maxDim; }
+                    }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                    const type = file.type === "image/png" ? "image/png" : "image/jpeg";
+                    screenshotData.push(canvas.toDataURL(type, 0.82));
+                    renderShotThumbs();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        event.target.value = "";
+    }
+
+    function renderShotThumbs() {
+        const el = document.getElementById("shotThumbs");
+        el.innerHTML = "";
+        if (!screenshotData.length) {
+            el.innerHTML = '<span class="shot-empty">No screenshots added yet.</span>';
+            return;
+        }
+        screenshotData.forEach((src, i) => {
+            const d = document.createElement("div");
+            d.className = "shot-thumb";
+            d.innerHTML = `<img src="${src}" alt=""><button type="button" class="shot-x" onclick="removeScreen(${i})">×</button>`;
+            el.appendChild(d);
+        });
+    }
+
+    function removeScreen(i) {
+        screenshotData.splice(i, 1);
+        renderShotThumbs();
+    }
+
     /* ---------- apps data ---------- */
     async function loadApps() {
         try {
@@ -507,6 +583,8 @@
             banner: bannerData || (existing ? existing.banner : "") || "",
             featured: document.getElementById("appFeatured").checked,
             description: document.getElementById("appDescription").value.trim(),
+            screenshots: screenshotData.slice(),
+            trailer: document.getElementById("appTrailer").value.trim(),
             releaseNotes: document.getElementById("appNotes").value.trim(),
             downloadUrl: document.getElementById("appDownload").value.trim()
         };
@@ -539,13 +617,16 @@
         document.getElementById("appVersion").value = app.version;
         document.getElementById("appIcon").value = app.icon || "";
         document.getElementById("appDescription").value = app.description;
+        document.getElementById("appTrailer").value = app.trailer || "";
         document.getElementById("appNotes").value = app.releaseNotes || "";
         document.getElementById("appDownload").value = app.downloadUrl || "";
         document.getElementById("appFeatured").checked = !!app.featured;
         iconData = app.image || "";
         bannerData = app.banner || "";
+        screenshotData = Array.isArray(app.screenshots) ? app.screenshots.slice() : [];
         setThumb("iconThumb", iconData);
         setThumb("bannerThumb", bannerData);
+        renderShotThumbs();
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
@@ -572,11 +653,14 @@
         document.getElementById("appVersion").value = "";
         document.getElementById("appIcon").value = "";
         document.getElementById("appDescription").value = "";
+        document.getElementById("appTrailer").value = "";
         document.getElementById("appNotes").value = "";
         document.getElementById("appDownload").value = "";
         document.getElementById("appFeatured").checked = false;
         clearImage("icon");
         clearImage("banner");
+        screenshotData = [];
+        renderShotThumbs();
     }
 
     function renderApps() {
@@ -592,10 +676,15 @@
             const ic = app.image
                 ? `<img src="${escapeHtml(app.image)}" alt="">`
                 : escapeHtml(app.icon || "★");
+            const shotN = Array.isArray(app.screenshots) ? app.screenshots.length : 0;
+            const tags = [];
+            if (app.featured) tags.push('<span class="badge">In slideshow</span>');
+            if (shotN) tags.push(`<span class="badge">${shotN} screenshot${shotN > 1 ? "s" : ""}</span>`);
+            if (app.trailer) tags.push('<span class="badge">Trailer</span>');
             item.innerHTML = `
                 <div class="ic">${ic}</div>
                 <div class="info">
-                    <h3>${escapeHtml(app.name)} ${app.featured ? '<span class="badge">In slideshow</span>' : ''}</h3>
+                    <h3>${escapeHtml(app.name)} ${tags.join(" ")}</h3>
                     <div class="meta">v${escapeHtml(app.version)} — ${escapeHtml(app.description)}</div>
                     <div class="app-actions">
                         <button class="ghost" onclick="editApp('${app.id}')">Edit</button>
@@ -645,6 +734,7 @@
         document.getElementById("setAccentColor").value = settings.accent;
         document.getElementById("setAccentHex").value = settings.accent;
         document.getElementById("setInterval").value = settings.carouselInterval;
+        document.getElementById("setDiscord").value = settings.discord || DEFAULT_SETTINGS.discord;
         document.getElementById("setFooter").value = settings.footer;
         applyAccentPreview(settings.accent);
     }
@@ -672,6 +762,7 @@
             tagline: document.getElementById("setTagline").value.trim(),
             accent: accent,
             carouselInterval: Math.max(2, Number(document.getElementById("setInterval").value) || 5),
+            discord: document.getElementById("setDiscord").value.trim() || DEFAULT_SETTINGS.discord,
             footer: document.getElementById("setFooter").value.trim() || DEFAULT_SETTINGS.footer
         };
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));

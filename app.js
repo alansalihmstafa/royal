@@ -1,12 +1,23 @@
 const searchBar = document.getElementById("searchBar");
 const appsGrid = document.getElementById("appsGrid");
 const updatesBox = document.getElementById("updatesBox");
-const contactForm = document.getElementById("contactForm");
 const slidesEl = document.getElementById("slides");
 const dotsEl = document.getElementById("dots");
 const prevBtn = document.getElementById("prevBtn");
 const nextBtn = document.getElementById("nextBtn");
 const carouselEl = document.getElementById("carousel");
+
+const heroEl = document.querySelector(".hero");
+const appsSection = document.getElementById("apps");
+const updatesSection = document.getElementById("updates");
+const contactSection = document.getElementById("contact");
+const detailSection = document.getElementById("appDetail");
+const detailBody = document.getElementById("detailBody");
+const backBtn = document.getElementById("backBtn");
+const lightbox = document.getElementById("lightbox");
+const lightboxImg = document.getElementById("lightboxImg");
+const lightboxClose = document.getElementById("lightboxClose");
+const discordBtn = document.getElementById("discordBtn");
 
 const STORAGE_KEY = "royalApps";
 const SETTINGS_KEY = "royalSettings";
@@ -16,7 +27,8 @@ const DEFAULT_SETTINGS = {
     tagline: "Premium desktop applications, tools, and software downloads.",
     accent: "#7c5cff",
     carouselInterval: 5,
-    footer: "© 2026 Royal. All rights reserved."
+    footer: "© 2026 Royal. All rights reserved.",
+    discord: "https://discord.gg/QpmxAKQrD"
 };
 
 let allApps = [];
@@ -67,6 +79,8 @@ function applySettings() {
 
     const footer = document.getElementById("footerText");
     if (footer) footer.textContent = settings.footer || DEFAULT_SETTINGS.footer;
+
+    if (discordBtn) discordBtn.href = settings.discord || DEFAULT_SETTINGS.discord;
 }
 
 async function loadSettings() {
@@ -128,23 +142,23 @@ function renderAll() {
     renderUpdates(allApps);
 }
 
-/* ---------- carousel ---------- */
+/* ---------- carousel (full-bleed sliding track) ---------- */
 function renderCarousel(apps) {
     const featured = apps.filter(a => a.featured);
     slideApps = featured.length > 0 ? featured : apps.slice(0, 5);
 
     if (!slideApps.length) {
-        carouselEl.style.display = "none";
+        if (heroEl) heroEl.style.display = "none";
         return;
     }
-    carouselEl.style.display = "";
+    if (heroEl) heroEl.style.display = "";
 
     slidesEl.innerHTML = "";
     dotsEl.innerHTML = "";
 
     slideApps.forEach((app, i) => {
         const slide = document.createElement("div");
-        slide.className = "slide" + (i === 0 ? " active" : "");
+        slide.className = "slide";
 
         const bgImg = app.banner || app.image;
         const bg = bgImg
@@ -159,7 +173,8 @@ function renderCarousel(apps) {
                 <h2>${escapeHtml(app.name)}</h2>
                 <p>${escapeHtml(app.description)}</p>
                 <div class="slide-meta">
-                    <a class="btn-primary" href="${escapeHtml(app.downloadUrl)}" target="_blank">⬇ Download</a>
+                    <a class="btn-primary" href="${escapeHtml(app.downloadUrl)}" target="_blank" rel="noopener">⬇ Download</a>
+                    <button class="btn-ghost" type="button" data-detail="${escapeHtml(app.id || app.name)}">View details</button>
                     <span class="slide-version">Version ${escapeHtml(app.version)}</span>
                 </div>
             </div>
@@ -172,7 +187,13 @@ function renderCarousel(apps) {
         dotsEl.appendChild(dot);
     });
 
+    slidesEl.querySelectorAll("[data-detail]").forEach(btn => {
+        btn.addEventListener("click", () => openDetail(btn.getAttribute("data-detail")));
+    });
+
     slideIndex = 0;
+    updateTrack();
+
     const showArrows = slideApps.length > 1;
     prevBtn.style.display = showArrows ? "" : "none";
     nextBtn.style.display = showArrows ? "" : "none";
@@ -181,13 +202,15 @@ function renderCarousel(apps) {
     startAutoplay();
 }
 
+function updateTrack() {
+    slidesEl.style.transform = `translateX(-${slideIndex * 100}%)`;
+    dotsEl.querySelectorAll(".dot").forEach((d, idx) => d.classList.toggle("active", idx === slideIndex));
+}
+
 function goToSlide(i) {
-    const slides = slidesEl.querySelectorAll(".slide");
-    const dots = dotsEl.querySelectorAll(".dot");
-    if (!slides.length) return;
-    slideIndex = (i + slides.length) % slides.length;
-    slides.forEach((s, idx) => s.classList.toggle("active", idx === slideIndex));
-    dots.forEach((d, idx) => d.classList.toggle("active", idx === slideIndex));
+    if (!slideApps.length) return;
+    slideIndex = (i + slideApps.length) % slideApps.length;
+    updateTrack();
     startAutoplay();
 }
 
@@ -217,10 +240,18 @@ function renderApps(apps) {
     apps.forEach(app => {
         const card = document.createElement("div");
         card.className = "app-card";
+        card.setAttribute("role", "button");
+        card.tabIndex = 0;
 
         const icon = app.image
             ? `<img src="${escapeHtml(app.image)}" alt="${escapeHtml(app.name)}" class="app-image">`
             : `<div class="app-icon">${escapeHtml(app.icon || "★")}</div>`;
+
+        const shotCount = Array.isArray(app.screenshots) ? app.screenshots.length : 0;
+        const extras = [];
+        if (app.trailer) extras.push("▶ Trailer");
+        if (shotCount) extras.push(`${shotCount} screenshot${shotCount > 1 ? "s" : ""}`);
+        const extrasHtml = extras.length ? `<div class="card-extras">${extras.map(e => `<span>${escapeHtml(e)}</span>`).join("")}</div>` : "";
 
         card.innerHTML = `
             <div class="app-head">
@@ -231,13 +262,122 @@ function renderApps(apps) {
                 </div>
             </div>
             <p class="desc">${escapeHtml(app.description)}</p>
-            <div class="release-notes">${escapeHtml(app.releaseNotes || "No release notes.")}</div>
-            <a class="download-btn" href="${escapeHtml(app.downloadUrl)}" target="_blank">⬇ Download</a>
+            ${extrasHtml}
+            <div class="card-actions">
+                <span class="details-link">View details →</span>
+                <a class="download-btn" href="${escapeHtml(app.downloadUrl)}" target="_blank" rel="noopener">⬇ Download</a>
+            </div>
         `;
+
+        card.addEventListener("click", function (event) {
+            if (event.target.closest("a")) return;
+            openDetail(app.id || app.name);
+        });
+        card.addEventListener("keydown", function (event) {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                openDetail(app.id || app.name);
+            }
+        });
+
         appsGrid.appendChild(card);
     });
 }
 
+/* ---------- app detail section ---------- */
+function videoEmbed(url) {
+    const clean = String(url || "").trim();
+    if (!clean) return "";
+    const yt = clean.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+    if (yt) {
+        return `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${yt[1]}" title="Trailer" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`;
+    }
+    const vimeo = clean.match(/vimeo\.com\/(\d+)/);
+    if (vimeo) {
+        return `<div class="video-wrap"><iframe src="https://player.vimeo.com/video/${vimeo[1]}" title="Trailer" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe></div>`;
+    }
+    if (clean.startsWith("data:video") || /\.(mp4|webm|ogg)(\?.*)?$/i.test(clean)) {
+        return `<div class="video-wrap"><video src="${escapeHtml(clean)}" controls playsinline></video></div>`;
+    }
+    return `<a class="btn-primary" href="${escapeHtml(clean)}" target="_blank" rel="noopener">▶ Watch trailer</a>`;
+}
+
+function openDetail(key) {
+    const app = allApps.find(a => (a.id && a.id === key) || a.name === key);
+    if (!app || !detailSection) return;
+
+    const icon = app.image
+        ? `<img src="${escapeHtml(app.image)}" alt="${escapeHtml(app.name)}" class="detail-icon">`
+        : `<div class="detail-icon emoji">${escapeHtml(app.icon || "★")}</div>`;
+
+    const shots = Array.isArray(app.screenshots) ? app.screenshots : [];
+    const shotsHtml = shots.length
+        ? `<h3 class="detail-h">Screenshots & demo</h3>
+           <div class="shots-grid">${shots.map((s, i) => `<img src="${escapeHtml(s)}" class="shot" alt="${escapeHtml(app.name)} screenshot ${i + 1}" data-src="${escapeHtml(s)}">`).join("")}</div>`
+        : "";
+
+    const trailerHtml = app.trailer ? `<h3 class="detail-h">Trailer</h3>${videoEmbed(app.trailer)}` : "";
+    const notesHtml = app.releaseNotes
+        ? `<div class="detail-notes"><b>What's new:</b> ${escapeHtml(app.releaseNotes)}</div>`
+        : "";
+
+    detailBody.innerHTML = `
+        <div class="detail-head">
+            ${icon}
+            <div class="detail-meta">
+                <h2>${escapeHtml(app.name)}</h2>
+                <span class="detail-ver">Version ${escapeHtml(app.version)}</span>
+                <a class="btn-primary detail-dl" href="${escapeHtml(app.downloadUrl)}" target="_blank" rel="noopener">⬇ Download</a>
+            </div>
+        </div>
+        <p class="detail-desc">${escapeHtml(app.description)}</p>
+        ${notesHtml}
+        ${trailerHtml}
+        ${shotsHtml}
+    `;
+
+    detailBody.querySelectorAll(".shot").forEach(img => {
+        img.addEventListener("click", () => openLightbox(img.getAttribute("data-src")));
+    });
+
+    if (heroEl) heroEl.style.display = "none";
+    if (appsSection) appsSection.style.display = "none";
+    if (updatesSection) updatesSection.style.display = "none";
+    if (contactSection) contactSection.style.display = "none";
+    detailSection.style.display = "block";
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function closeDetail() {
+    if (!detailSection) return;
+    detailSection.style.display = "none";
+    if (heroEl) heroEl.style.display = "";
+    if (appsSection) appsSection.style.display = "";
+    if (updatesSection) updatesSection.style.display = "";
+    if (contactSection) contactSection.style.display = "";
+}
+
+if (backBtn) backBtn.addEventListener("click", closeDetail);
+
+/* ---------- lightbox ---------- */
+function openLightbox(src) {
+    if (!lightbox) return;
+    lightboxImg.src = src;
+    lightbox.classList.add("open");
+}
+function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove("open");
+    lightboxImg.src = "";
+}
+if (lightbox) lightbox.addEventListener("click", function (event) {
+    if (event.target === lightbox || event.target === lightboxClose) closeLightbox();
+});
+document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") closeLightbox();
+});
+
+/* ---------- updates ---------- */
 function renderUpdates(apps) {
     updatesBox.innerHTML = "";
 
@@ -265,6 +405,7 @@ searchBar.addEventListener("keydown", function (event) {
 });
 
 searchBar.addEventListener("input", function () {
+    if (detailSection && detailSection.style.display === "block") closeDetail();
     const value = searchBar.value.toLowerCase();
     const filtered = allApps.filter(app =>
         String(app.name).toLowerCase().includes(value) ||
@@ -272,12 +413,6 @@ searchBar.addEventListener("input", function () {
         String(app.version).toLowerCase().includes(value)
     );
     renderApps(filtered);
-});
-
-contactForm.addEventListener("submit", function (event) {
-    event.preventDefault();
-    alert("Message sent! This demo form does not store messages yet.");
-    contactForm.reset();
 });
 
 /* ---------- init ---------- */
