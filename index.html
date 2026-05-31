@@ -4,89 +4,84 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Royal</title>
+    <meta name="description" content="Royal — premium desktop applications, tools, and software downloads." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
 
 <header class="navbar">
-    <div class="logo">ROYAL</div>
+    <div class="logo" id="siteLogo">ROYAL</div>
 
-    <input
-        type="text"
-        id="searchBar"
-        placeholder="Search apps..."
-        autocomplete="off"
-    />
+    <nav class="nav-links">
+        <a href="#apps">Apps</a>
+        <a href="#updates">Updates</a>
+        <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="nav-right">
+        <input type="text" id="searchBar" placeholder="Search apps..." autocomplete="off" />
+    </div>
 </header>
 
 <section class="hero">
-    <div class="glow-circle"></div>
-
-    <h1>Royal</h1>
-
-    <p>
-        Premium desktop applications, tools, and software downloads.
-    </p>
-
-    <a href="#apps" class="hero-btn">
-        Explore Apps
-    </a>
-</section>
-
-<section class="section" id="apps">
-    <div class="section-title">
-        <h2>Featured Applications</h2>
-        <p>Download the latest Royal desktop apps.</p>
-    </div>
-
-    <div class="apps-grid" id="appsGrid">
-        <div class="empty-box">Loading apps...</div>
+    <div class="carousel" id="carousel">
+        <div class="slides" id="slides"></div>
+        <button class="carousel-btn prev" id="prevBtn" aria-label="Previous">‹</button>
+        <button class="carousel-btn next" id="nextBtn" aria-label="Next">›</button>
+        <div class="carousel-dots" id="dots"></div>
     </div>
 </section>
 
-<section class="section updates">
-    <div class="section-title">
-        <h2>Latest Updates</h2>
-        <p>Royal release news and app updates.</p>
-    </div>
+<main class="wrap">
+    <section class="section" id="apps">
+        <div class="section-title">
+            <h2>Featured Applications</h2>
+            <p id="appsSubtitle">Download the latest Royal desktop apps.</p>
+        </div>
+        <div class="apps-grid" id="appsGrid">
+            <div class="empty-box">Loading apps...</div>
+        </div>
+    </section>
+</main>
 
-    <div class="updates-box" id="updatesBox"></div>
+<section class="section updates" id="updates">
+    <div class="wrap">
+        <div class="section-title">
+            <h2>Latest Updates</h2>
+            <p>Royal release news and app updates.</p>
+        </div>
+        <div class="updates-box" id="updatesBox"></div>
+    </div>
 </section>
 
-<section class="section contact">
-    <div class="section-title">
-        <h2>Contact</h2>
-        <p>Contact Royal for support or updates.</p>
-    </div>
+<main class="wrap">
+    <section class="section contact" id="contact">
+        <div class="section-title">
+            <h2>Contact</h2>
+            <p>Get in touch with Royal for support or updates.</p>
+        </div>
 
-    <div class="contact-buttons">
-        <a href="https://wa.me/" target="_blank" class="contact-btn">
-            WhatsApp
-        </a>
+        <div class="contact-buttons">
+            <a href="https://wa.me/" target="_blank" class="contact-btn">WhatsApp</a>
+            <a href="https://discord.com/" target="_blank" class="contact-btn">Discord</a>
+            <a href="https://github.com/alansalihmstafa/royal" target="_blank" class="contact-btn">GitHub</a>
+        </div>
 
-        <a href="https://discord.com/" target="_blank" class="contact-btn">
-            Discord
-        </a>
-
-        <a href="https://github.com/alansalihmstafa/royal" target="_blank" class="contact-btn">
-            GitHub
-        </a>
-    </div>
-
-    <form class="contact-form" id="contactForm">
-        <input type="text" placeholder="Your name" required />
-        <input type="email" placeholder="Your email" required />
-        <textarea placeholder="Your message" required></textarea>
-
-        <button type="submit">
-            Send Message
-        </button>
-    </form>
-</section>
+        <form class="contact-form" id="contactForm">
+            <input type="text" placeholder="Your name" required />
+            <input type="email" placeholder="Your email" required />
+            <textarea placeholder="Your message" required></textarea>
+            <button type="submit">Send Message</button>
+        </form>
+    </section>
+</main>
 
 <footer>
-    <p>© 2026 Royal. All rights reserved.</p>
+    <p id="footerText">© 2026 Royal. All rights reserved.</p>
 </footer>
 
 <script src="app.js"></script>
