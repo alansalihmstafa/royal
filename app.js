@@ -1,23 +1,39 @@
-const search =
-document.getElementById("searchBar");
+const searchBar = document.getElementById("searchBar");
+const contactForm = document.getElementById("contactForm");
 
-search.addEventListener("input",()=>{
+/* Search apps + hidden admin access */
 
-    const value =
-    search.value.toLowerCase();
+searchBar.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+        const value = searchBar.value.trim().toLowerCase();
 
-    document
-    .querySelectorAll(".card")
-    .forEach(card=>{
+        if (value === "@admin") {
+            window.location.href = "admin.html";
+        }
+    }
+});
 
-        const text =
-        card.innerText.toLowerCase();
+searchBar.addEventListener("input", function () {
+    const value = searchBar.value.toLowerCase();
+    const cards = document.querySelectorAll(".app-card");
 
-        card.style.display =
-        text.includes(value)
-        ? "block"
-        : "none";
+    cards.forEach(function (card) {
+        const text = card.innerText.toLowerCase();
 
+        if (text.includes(value)) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
     });
+});
 
+/* Contact form demo */
+
+contactForm.addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    alert("Message sent! This is a demo form. To receive messages, you need Formspree, Netlify Forms, or backend.");
+
+    contactForm.reset();
 });

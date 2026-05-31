@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Royal Admin</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050505;
+            color: white;
+            font-family: "Segoe UI", Arial, sans-serif;
+            min-height: 100vh;
+        }
+
+        .login-screen,
+        .dashboard {
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        .login-screen {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 380px;
+            background: #101010;
+            border: 1px solid rgba(0, 255, 136, 0.45);
+            border-radius: 22px;
+            padding: 30px;
+            box-shadow: 0 0 35px rgba(0, 255, 136, 0.25);
+        }
+
+        .login-box h1 {
+            text-align: center;
+            color: #00ff88;
+            margin-bottom: 25px;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 14px;
+            margin-bottom: 14px;
+            background: #050505;
+            color: white;
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            border-radius: 12px;
+            outline: none;
+        }
+
+        .login-box button,
+        .btn {
+            width: 100%;
+            display: inline-block;
+            padding: 14px;
+            border-radius: 12px;
+            border: none;
+            background: #00ff88;
+            color: #000;
+            font-weight: 900;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+
+        .login-box button:hover,
+        .btn:hover {
+            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
+        }
+
+        .error {
+            color: #ff4d4d;
+            text-align: center;
+            margin-top: 12px;
+            min-height: 20px;
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #101010;
+            padding: 20px;
+            border-bottom: 1px solid rgba(0, 255, 136, 0.35);
+        }
+
+        header h1 {
+            color: #00ff88;
+            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        }
+
+        header button {
+            padding: 10px 18px;
+            background: #00ff88;
+            border: none;
+            border-radius: 10px;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .container {
+            padding: 35px 8%;
+        }
+
+        .warning {
+            background: rgba(255, 193, 7, 0.08);
+            border: 1px solid rgba(255, 193, 7, 0.35);
+            color: #ffd166;
+            padding: 18px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 22px;
+        }
+
+        .card {
+            background: #101010;
+            border: 1px solid rgba(0, 255, 136, 0.35);
+            border-radius: 18px;
+            padding: 22px;
+        }
+
+        .card h2 {
+            color: #00ff88;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            color: #bbbbbb;
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+
+        code {
+            display: block;
+            background: #050505;
+            color: #00ff88;
+            padding: 12px;
+            border-radius: 10px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        .small {
+            font-size: 13px;
+            color: #888;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>Royal Admin</h1>
+
+            <input type="text" id="username" placeholder="Username" />
+            <input type="password" id="password" placeholder="Password" />
+
+            <button onclick="login()">Login</button>
+
+            <div class="error" id="error"></div>
+
+            <p class="small">
+                Demo login only. For real security, use a backend.
+            </p>
+        </div>
+    </div>
+
+    <div class="dashboard" id="dashboard">
+        <header>
+            <h1>Royal Admin</h1>
+            <button onclick="logout()">Logout</button>
+        </header>
+
+        <div class="container">
+
+            <div class="warning">
+                This admin panel is for your static Netlify website.
+                Because Netlify static sites cannot save EXE files directly from the browser,
+                publish your setup file using GitHub Releases, then paste the release download link inside index.html.
+            </div>
+
+            <div class="grid">
+
+                <div class="card">
+                    <h2>Current Download Link</h2>
+
+                    <p>
+                        Your current ChessBot download button uses this GitHub Release direct link:
+                    </p>
+
+                    <code>
+https://github.com/alansalihmstafa/royal/releases/download/version/ChessBot_Installer.exe
+                    </code>
+
+                    <a
+                        class="btn"
+                        href="https://github.com/alansalihmstafa/royal/releases/download/version/ChessBot_Installer.exe"
+                        target="_blank"
+                    >
+                        Test Download
+                    </a>
+                </div>
+
+                <div class="card">
+                    <h2>Publish New EXE</h2>
+
+                    <p>
+                        Upload your new installer as a GitHub Release asset.
+                    </p>
+
+                    <a
+                        class="btn"
+                        href="https://github.com/alansalihmstafa/royal/releases"
+                        target="_blank"
+                    >
+                        Open GitHub Releases
+                    </a>
+
+                    <p class="small">
+                        After uploading, copy the new direct download link and put it inside index.html.
+                    </p>
+                </div>
+
+                <div class="card">
+                    <h2>Edit Website</h2>
+
+                    <p>
+                        To change app name, description, version, or download link, edit index.html in GitHub.
+                    </p>
+
+                    <a
+                        class="btn"
+                        href="https://github.com/alansalihmstafa/royal"
+                        target="_blank"
+                    >
+                        Open GitHub Repo
+                    </a>
+                </div>
+
+                <div class="card">
+                    <h2>Netlify Deploy</h2>
+
+                    <p>
+                        After every GitHub commit, Netlify should automatically redeploy your website.
+                    </p>
+
+                    <a
+                        class="btn"
+                        href="https://app.netlify.com/"
+                        target="_blank"
+                    >
+                        Open Netlify
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const correctUsername = "admin";
+        const correctPassword = "royal123";
+
+        const loginScreen = document.getElementById("loginScreen");
+        const dashboard = document.getElementById("dashboard");
+        const error = document.getElementById("error");
+
+        function checkLogin() {
+            if (localStorage.getItem("royalAdmin") === "true") {
+                loginScreen.style.display = "none";
+                dashboard.style.display = "block";
+            } else {
+                loginScreen.style.display = "flex";
+                dashboard.style.display = "none";
+            }
+        }
+
+        function login() {
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value.trim();
+
+            if (username === correctUsername && password === correctPassword) {
+                localStorage.setItem("royalAdmin", "true");
+                checkLogin();
+            } else {
+                error.textContent = "Wrong username or password";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("royalAdmin");
+            checkLogin();
+        }
+
+        checkLogin();
+    </script>
+
+</body>
+</html>

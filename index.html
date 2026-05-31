@@ -1,76 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Royal</title>
-<link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Royal</title>
+
+    <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<header>
-    <h1>ROYAL</h1>
+    <header class="navbar">
+        <div class="logo">ROYAL</div>
 
-    <input
-        type="text"
-        id="searchBar"
-        placeholder="Search apps..."
-    >
-</header>
+        <input
+            type="text"
+            id="searchBar"
+            placeholder="Search apps..."
+            autocomplete="off"
+        />
+    </header>
 
-<section class="hero">
-    <h2>Premium Application Hub</h2>
-    <p>Download my desktop applications.</p>
-</section>
+    <section class="hero">
+        <div class="glow-circle"></div>
 
-<section class="apps">
+        <h1>Royal</h1>
 
-    <div class="card">
-        <h3>ChessBot</h3>
-        <p>Advanced Chess Assistant</p>
+        <p>
+            Premium desktop applications, tools, and software downloads.
+        </p>
 
-        <a
-            href="files/ChessBotSetup.exe"
-            download
-            class="btn"
-        >
-            Download
+        <a href="#apps" class="hero-btn">
+            Explore Apps
         </a>
-    </div>
+    </section>
 
-    <div class="card">
-        <h3>MK Tool</h3>
-        <p>Mortal Kombat Utility</p>
+    <section class="section" id="apps">
+        <div class="section-title">
+            <h2>Featured Applications</h2>
+            <p>Download the latest Royal apps directly from here.</p>
+        </div>
 
-        <a
-            href="files/MKToolSetup.exe"
-            download
-            class="btn"
-        >
-            Download
-        </a>
-    </div>
+        <div class="apps-grid">
 
-    <div class="card">
-        <h3>Game Launcher</h3>
-        <p>Launch all your games easily.</p>
+            <div class="app-card">
+                <div class="app-icon">♟</div>
 
-        <a
-            href="files/GameLauncherSetup.exe"
-            download
-            class="btn"
-        >
-            Download
-        </a>
-    </div>
+                <h3>ChessBot</h3>
 
-</section>
+                <p>
+                    Advanced chess assistant application for desktop.
+                </p>
 
-<footer>
-    Royal © 2026
-</footer>
+                <div class="app-info">
+                    <span>Version: 1.0.0</span>
+                    <span>Setup: EXE</span>
+                </div>
 
-<script src="app.js"></script>
+                <a
+                    class="download-btn"
+                    href="https://github.com/alansalihmstafa/royal/releases/download/version/ChessBot_Installer.exe"
+                >
+                    Download ChessBot
+                </a>
+            </div>
 
+            <div class="app-card">
+                <div class="app-icon">⚙</div>
+
+                <h3>Coming Soon</h3>
+
+                <p>
+                    New Royal application will be published soon.
+                </p>
+
+                <div class="app-info">
+                    <span>Version: Soon</span>
+                    <span>Status: Waiting</span>
+                </div>
+
+                <button class="download-btn disabled" disabled>
+                    Coming Soon
+                </button>
+            </div>
+
+            <div class="app-card">
+                <div class="app-icon">🚀</div>
+
+                <h3>Royal Launcher</h3>
+
+                <p>
+                    Future launcher for managing all Royal desktop apps.
+                </p>
+
+                <div class="app-info">
+                    <span>Version: Soon</span>
+                    <span>Status: Planned</span>
+                </div>
+
+                <button class="download-btn disabled" disabled>
+                    Coming Soon
+                </button>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="section updates">
+        <div class="section-title">
+            <h2>Latest Updates</h2>
+            <p>News and release notes for Royal applications.</p>
+        </div>
+
+        <div class="updates-box">
+            <div class="update-card">
+                <h3>ChessBot Installer Published</h3>
+                <p>
+                    ChessBot setup is now available for direct download.
+                </p>
+            </div>
+
+            <div class="update-card">
+                <h3>Royal Website Online</h3>
+                <p>
+                    Royal is now ready for hosting on Netlify.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section contact">
+        <div class="section-title">
+            <h2>Contact</h2>
+            <p>Contact Royal for help, updates, or support.</p>
+        </div>
+
+        <div class="contact-buttons">
+            <a
+                href="https://wa.me/"
+                target="_blank"
+                class="contact-btn"
+            >
+                WhatsApp
+            </a>
+
+            <a
+                href="https://discord.com/"
+                target="_blank"
+                class="contact-btn"
+            >
+                Discord
+            </a>
+        </div>
+
+        <form class="contact-form" id="contactForm">
+            <input type="text" placeholder="Your name" required />
+            <input type="email" placeholder="Your email" required />
+            <textarea placeholder="Your message" required></textarea>
+
+            <button type="submit">
+                Send Message
+            </button>
+        </form>
+    </section>
+
+    <footer>
+        <p>© 2026 Royal. All rights reserved.</p>
+        <p class="small-text">Type @admin in search to open hidden admin page.</p>
+    </footer>
+
+    <script src="app.js"></script>
 </body>
 </html>
