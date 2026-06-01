@@ -181,7 +181,7 @@ function renderCarousel(apps) {
                 <h2>${escapeHtml(app.name)}</h2>
                 <p>${escapeHtml(app.description)}</p>
                 <div class="slide-meta">
-                    <a class="download-btn" href="${escapeHtml(app.downloadUrl)}">⬇ Download</a>
+                    <a class="btn-primary" href="${escapeHtml(app.downloadUrl)}" target="_blank" rel="noopener">⬇ Download</a>
                     <button class="btn-ghost" type="button" data-detail="${escapeHtml(app.id || app.name)}">View details</button>
                     <span class="slide-version">Version ${escapeHtml(app.version)}</span>
                 </div>
@@ -268,7 +268,7 @@ function renderApps(apps) {
             ${extrasHtml}
             <div class="card-actions">
                 <span class="details-link">View details →</span>
-                <a class="download-btn" href="${escapeHtml(app.downloadUrl)}">⬇ Download</a>
+                <a class="download-btn" href="${escapeHtml(app.downloadUrl)}" target="_blank" rel="noopener">⬇ Download</a>
             </div>
         `;
         card.addEventListener("click", function (event) {
@@ -324,7 +324,7 @@ function openDetail(key) {
             <div class="detail-meta">
                 <h2>${escapeHtml(app.name)}</h2>
                 <span class="detail-ver">Version ${escapeHtml(app.version)}</span>
-                <a class="btn-primary detail-dl" href="${escapeHtml(app.downloadUrl)}">⬇ Download</a>
+                <a class="btn-primary detail-dl" href="${escapeHtml(app.downloadUrl)}" target="_blank" rel="noopener">⬇ Download</a>
             </div>
         </div>
         <p class="detail-desc">${escapeHtml(app.description)}</p>
@@ -391,11 +391,6 @@ function renderUpdates(apps) {
     });
 }
 /* ---------- search ---------- */
-searchBar.addEventListener("keydown", function (event) {
-    if (event.key === "Enter" && searchBar.value.trim().toLowerCase() === "@admin") {
-        window.location.href = "admin.html";
-    }
-});
 searchBar.addEventListener("input", function () {
     if (detailSection && detailSection.style.display === "block") closeDetail();
     const value = searchBar.value.toLowerCase();
