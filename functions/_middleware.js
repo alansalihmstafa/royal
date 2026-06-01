@@ -148,14 +148,21 @@ export async function onRequest(context) {
     }
 
     await env.ROYAL_KV.delete(key);
-    return new Response(null, {
-      status: 303,
-      headers: {
-        "location": "/royal-owner-panel",
-        "set-cookie": `royal_owner_session=${encodeURIComponent(expectedSession)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400, ${clearCookie("royal_otp_id")}`
-      }
-    });
-  }
+   const headers = new Headers();
+headers.set("location", "/royal-owner-panel");
+headers.append(
+  "Set-Cookie",
+  `royal_owner_session=${encodeURIComponent(expectedSession)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
+);
+headers.append(
+  "Set-Cookie",
+  clearCookie("royal_otp_id")
+);
+
+return new Response(null, {
+  status: 303,
+  headers
+});
 
   return html(loginPage(env, "Invalid action."), 400);
 }
