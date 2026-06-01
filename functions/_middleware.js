@@ -8,15 +8,24 @@ const OLD_ADMIN_PATHS = new Set([
   "/admin.html"
 ]);
 
-function html(body, status = 200, headers = {}) {
+const MAX_LOGIN_ATTEMPTS = 6;
+const LOGIN_WINDOW_SECONDS = 10 * 60;
+
+function html(body, status = 200, extraHeaders = {}) {
   return new Response(body, {
     status,
     headers: {
       "content-type": "text/html; charset=utf-8",
       "cache-control": "no-store",
-      ...headers
+      ...extraHeaders
     }
   });
+}
+
+function getClientIp(request) {
+  return request.headers.get("cf-connecting-ip") ||
+         request.headers.get("x-forwarded-for") ||
+         "unknown";
 }
 
 function getCookie(request, name) {
@@ -40,6 +49,26 @@ async function sessionToken(env) {
   return sha256(password + ":" + secret);
 }
 
+async function checkRateLimit(request, env) {
+  // Uses your existing ROYAL_KV binding. If KV is not bound, do not crash the site.
+  if (!env.ROYAL_KV) return { allowed: true, remaining: MAX_LOGIN_ATTEMPTS };
+
+  const ip = getClientIp(request);
+  const bucket = Math.floor(Date.now() / (LOGIN_WINDOW_SECONDS * 1000));
+  const key = `rate:owner-login:${ip}:${bucket}`;
+
+  const current = Number(await env.ROYAL_KV.get(key) || "0");
+  if (current >= MAX_LOGIN_ATTEMPTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  await env.ROYAL_KV.put(key, String(current + 1), {
+    expirationTtl: LOGIN_WINDOW_SECONDS + 60
+  });
+
+  return { allowed: true, remaining: MAX_LOGIN_ATTEMPTS - current - 1 };
+}
+
 function loginPage(error = "") {
   return `<!doctype html>
 <html lang="en">
@@ -55,12 +84,12 @@ function loginPage(error = "") {
       color: #f4f4fb;
     }
     .box {
-      width: min(92vw, 390px); padding: 32px; border-radius: 22px;
-      background: rgba(20,20,31,.9); border: 1px solid rgba(255,255,255,.1);
+      width: min(92vw, 410px); padding: 32px; border-radius: 22px;
+      background: rgba(20,20,31,.92); border: 1px solid rgba(255,255,255,.1);
       box-shadow: 0 24px 70px rgba(0,0,0,.55);
     }
     h1 { margin: 0 0 8px; font-size: 28px; }
-    p { margin: 0 0 22px; color: #9aa0b4; }
+    p { margin: 0 0 22px; color: #9aa0b4; line-height: 1.5; }
     input {
       width: 100%; box-sizing: border-box; padding: 13px 14px; border-radius: 12px;
       border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05);
@@ -77,7 +106,7 @@ function loginPage(error = "") {
 <body>
   <form class="box" method="POST" action="/royal-owner-panel">
     <h1>Royal Owner Login</h1>
-    <p>This page is owner-only. The admin panel is not sent to the browser until login is correct.</p>
+    <p>Owner-only admin. The real admin panel is not sent to the browser until this server-side login is correct.</p>
     <input name="password" type="password" placeholder="Owner password" autocomplete="current-password" autofocus>
     <button type="submit">Open Admin Panel</button>
     <div class="err">${error}</div>
@@ -91,17 +120,22 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // Hide the old obvious admin URL. Use /royal-owner-panel instead.
+  // Hide old obvious admin route completely.
   if (OLD_ADMIN_PATHS.has(path)) {
     return html("Not found", 404);
   }
 
-  // Only protect the owner panel route; let the public site and APIs continue normally.
+  // Only protect the owner panel path. Public site and API continue normally.
   if (!OWNER_PATHS.has(path)) {
     return next();
   }
 
   if (request.method === "POST") {
+    const limited = await checkRateLimit(request, env);
+    if (!limited.allowed) {
+      return html(loginPage("Too many attempts. Wait 10 minutes and try again."), 429);
+    }
+
     const form = await request.formData();
     const provided = String(form.get("password") || "");
     const realPassword = env.ADMIN_PASSWORD || "royal";
@@ -111,11 +145,13 @@ export async function onRequest(context) {
     }
 
     const token = await sessionToken(env);
-    const headers = {
-      "set-cookie": `royal_owner_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`,
-      "location": "/royal-owner-panel"
-    };
-    return new Response(null, { status: 303, headers });
+    return new Response(null, {
+      status: 303,
+      headers: {
+        "location": "/royal-owner-panel",
+        "set-cookie": `royal_owner_session=${encodeURIComponent(token)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
+      }
+    });
   }
 
   const expected = await sessionToken(env);
