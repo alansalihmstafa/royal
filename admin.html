@@ -327,7 +327,7 @@
     const errorMessage = document.getElementById("errorMessage");
 
     let apps = [];
-    let adminPassword = sessionStorage.getItem("royalAdminPassword") || "";
+    let adminPassword = "";
 
     function showMessage(success, message) {
         successMessage.textContent = success ? message : "";
@@ -343,20 +343,21 @@
         }
 
         try {
-            const response = await fetch("/api/apps", {
-                method: "GET",
+            const response = await fetch("/api/auth", {
+                method: "POST",
                 headers: {
                     "x-admin-password": password
                 }
             });
 
-            if (!response.ok && response.status === 401) {
-                loginError.textContent = "Wrong admin password";
+            const data = await response.json();
+
+            if (!data.success) {
+                loginError.textContent = data.message || "Wrong admin password";
                 return;
             }
 
             adminPassword = password;
-            sessionStorage.setItem("royalAdminPassword", password);
 
             loginScreen.style.display = "none";
             dashboard.style.display = "block";
@@ -369,7 +370,6 @@
     }
 
     function logout() {
-        sessionStorage.removeItem("royalAdminPassword");
         adminPassword = "";
         dashboard.style.display = "none";
         loginScreen.style.display = "flex";
@@ -535,15 +535,15 @@
                 <code>${escapeHtml(app.downloadUrl)}</code>
 
                 <div class="app-actions">
-                    <a class="btn" href="${escapeHtml(app.downloadUrl)}" target="_blank">
+                    <a class="btn" href="${sanitizeUrl(app.downloadUrl)}" target="_blank" rel="noopener noreferrer">
                         Test Download
                     </a>
 
-                    <button class="dark-btn" onclick="editApp('${app.id}')">
+                    <button class="dark-btn" data-action="edit" data-id="${escapeHtml(app.id)}">
                         Edit
                     </button>
 
-                    <button class="danger" onclick="deleteApp('${app.id}')">
+                    <button class="danger" data-action="delete" data-id="${escapeHtml(app.id)}">
                         Delete
                     </button>
                 </div>
@@ -551,6 +551,12 @@
 
             appsList.appendChild(item);
         });
+    }
+
+    function sanitizeUrl(url) {
+        const str = String(url || "");
+        if (/^https?:\/\//i.test(str)) return escapeHtml(str);
+        return "";
     }
 
     function escapeHtml(text) {
@@ -562,11 +568,18 @@
             .replaceAll("'", "&#039;");
     }
 
-    if (adminPassword) {
-        loginScreen.style.display = "none";
-        dashboard.style.display = "block";
-        loadApps();
-    }
+    document.getElementById("appsList").addEventListener("click", function (event) {
+        const button = event.target.closest("[data-action]");
+        if (!button) return;
+
+        const action = button.getAttribute("data-action");
+        const id = button.getAttribute("data-id");
+
+        if (action === "edit") editApp(id);
+        if (action === "delete") deleteApp(id);
+    });
+
+    // Admin must log in each session — no auto-login from stored credentials
 </script>
 
 </body>
