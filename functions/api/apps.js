@@ -12,146 +12,73 @@ const json = (data, status = 200) =>
 
 const APPS_KEY = "royal:apps";
 
-function getPassword(env) {
-  return env.ADMIN_PASSWORD || "royal";
-}
-
-function isAdmin(request, env) {
-  return request.headers.get("x-admin-password") === getPassword(env);
-}
-
+function getPassword(env) { return env.ADMIN_PASSWORD || "royal"; }
+function isAdmin(request, env) { return request.headers.get("x-admin-password") === getPassword(env); }
 async function readApps(env) {
-  if (!env.ROYAL_KV) {
-    throw new Error("Missing Cloudflare KV binding named ROYAL_KV");
-  }
-
+  if (!env.ROYAL_KV) throw new Error("Missing Cloudflare KV binding named ROYAL_KV");
   const raw = await env.ROYAL_KV.get(APPS_KEY);
-
   if (!raw) return [];
-
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  try { const parsed = JSON.parse(raw); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
 }
-
 async function writeApps(env, apps) {
-  if (!env.ROYAL_KV) {
-    throw new Error("Missing Cloudflare KV binding named ROYAL_KV");
-  }
-
+  if (!env.ROYAL_KV) throw new Error("Missing Cloudflare KV binding named ROYAL_KV");
   await env.ROYAL_KV.put(APPS_KEY, JSON.stringify(apps));
 }
-
-export async function onRequestOptions() {
-  return json({ success: true });
+function cleanApp(payload, existing = {}) {
+  return {
+    ...existing,
+    id: payload.id || existing.id || "app-" + Date.now().toString(36),
+    name: String(payload.name || "").trim(),
+    version: String(payload.version || "").trim(),
+    icon: String(payload.icon || "").trim(),
+    image: String(payload.image || "").trim(),
+    banner: String(payload.banner || "").trim(),
+    featured: Boolean(payload.featured),
+    description: String(payload.description || "").trim(),
+    screenshots: Array.isArray(payload.screenshots) ? payload.screenshots : [],
+    trailer: String(payload.trailer || "").trim(),
+    releaseNotes: String(payload.releaseNotes || "").trim(),
+    downloadUrl: String(payload.downloadUrl || "").trim()
+  };
 }
-
-export async function onRequestGet({ env }) {
+export async function onRequestOptions() { return json({ success: true }); }
+export async function onRequestGet({ request, env }) {
   try {
-    const apps = await readApps(env);
-    return json({ success: true, apps });
-  } catch (error) {
-    return json({ success: false, message: error.message }, 500);
-  }
+    const provided = request.headers.get("x-admin-password");
+    if (provided !== null && !isAdmin(request, env)) return json({ success: false, message: "Wrong admin password" }, 401);
+    return json({ success: true, apps: await readApps(env) });
+  } catch (error) { return json({ success: false, message: error.message }, 500); }
 }
-
 export async function onRequestPost({ request, env }) {
   try {
-    if (!isAdmin(request, env)) {
-      return json({ success: false, message: "Wrong admin password" }, 401);
-    }
-
+    if (!isAdmin(request, env)) return json({ success: false, message: "Wrong admin password" }, 401);
     const payload = await request.json();
     const apps = await readApps(env);
-
-    const app = {
-      id: payload.id || "app-" + Date.now().toString(36),
-      name: String(payload.name || "").trim(),
-      version: String(payload.version || "").trim(),
-      icon: String(payload.icon || "").trim(),
-      image: String(payload.image || "").trim(),
-      description: String(payload.description || "").trim(),
-      releaseNotes: String(payload.releaseNotes || "").trim(),
-      downloadUrl: String(payload.downloadUrl || "").trim()
-    };
-
-    if (!app.name || !app.version || !app.description || !app.downloadUrl) {
-      return json({ success: false, message: "Missing required fields" }, 400);
-    }
-
-    apps.push(app);
-    await writeApps(env, apps);
-
-    return json({ success: true, apps });
-  } catch (error) {
-    return json({ success: false, message: error.message }, 500);
-  }
+    const app = cleanApp(payload);
+    if (!app.name || !app.version || !app.description || !app.downloadUrl) return json({ success: false, message: "Missing required fields" }, 400);
+    apps.push(app); await writeApps(env, apps); return json({ success: true, apps });
+  } catch (error) { return json({ success: false, message: error.message }, 500); }
 }
-
 export async function onRequestPut({ request, env }) {
   try {
-    if (!isAdmin(request, env)) {
-      return json({ success: false, message: "Wrong admin password" }, 401);
-    }
-
+    if (!isAdmin(request, env)) return json({ success: false, message: "Wrong admin password" }, 401);
     const payload = await request.json();
-
-    if (!payload.id) {
-      return json({ success: false, message: "Missing app id" }, 400);
-    }
-
+    if (!payload.id) return json({ success: false, message: "Missing app id" }, 400);
     const apps = await readApps(env);
     const index = apps.findIndex(app => app.id === payload.id);
-
-    if (index === -1) {
-      return json({ success: false, message: "App not found" }, 404);
-    }
-
-    apps[index] = {
-      ...apps[index],
-      name: String(payload.name || "").trim(),
-      version: String(payload.version || "").trim(),
-      icon: String(payload.icon || "").trim(),
-      image: String(payload.image || "").trim(),
-      description: String(payload.description || "").trim(),
-      releaseNotes: String(payload.releaseNotes || "").trim(),
-      downloadUrl: String(payload.downloadUrl || "").trim()
-    };
-
-    if (!apps[index].name || !apps[index].version || !apps[index].description || !apps[index].downloadUrl) {
-      return json({ success: false, message: "Missing required fields" }, 400);
-    }
-
-    await writeApps(env, apps);
-
-    return json({ success: true, apps });
-  } catch (error) {
-    return json({ success: false, message: error.message }, 500);
-  }
+    if (index === -1) return json({ success: false, message: "App not found" }, 404);
+    const app = cleanApp(payload, apps[index]);
+    if (!app.name || !app.version || !app.description || !app.downloadUrl) return json({ success: false, message: "Missing required fields" }, 400);
+    apps[index] = app; await writeApps(env, apps); return json({ success: true, apps });
+  } catch (error) { return json({ success: false, message: error.message }, 500); }
 }
-
 export async function onRequestDelete({ request, env }) {
   try {
-    if (!isAdmin(request, env)) {
-      return json({ success: false, message: "Wrong admin password" }, 401);
-    }
-
+    if (!isAdmin(request, env)) return json({ success: false, message: "Wrong admin password" }, 401);
     const payload = await request.json();
-
-    if (!payload.id) {
-      return json({ success: false, message: "Missing app id" }, 400);
-    }
-
+    if (!payload.id) return json({ success: false, message: "Missing app id" }, 400);
     const apps = await readApps(env);
     const nextApps = apps.filter(app => app.id !== payload.id);
-
-    await writeApps(env, nextApps);
-
-    return json({ success: true, apps: nextApps });
-  } catch (error) {
-    return json({ success: false, message: error.message }, 500);
-  }
+    await writeApps(env, nextApps); return json({ success: true, apps: nextApps });
+  } catch (error) { return json({ success: false, message: error.message }, 500); }
 }
