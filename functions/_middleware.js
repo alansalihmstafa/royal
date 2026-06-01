@@ -50,7 +50,6 @@ async function sessionToken(env) {
 }
 
 async function checkRateLimit(request, env) {
-  // Uses your existing ROYAL_KV binding. If KV is not bound, do not crash the site.
   if (!env.ROYAL_KV) return { allowed: true, remaining: MAX_LOGIN_ATTEMPTS };
 
   const ip = getClientIp(request);
@@ -69,13 +68,47 @@ async function checkRateLimit(request, env) {
   return { allowed: true, remaining: MAX_LOGIN_ATTEMPTS - current - 1 };
 }
 
-function loginPage(error = "") {
+async function verifyTurnstile(request, token, env) {
+  if (!env.TURNSTILE_SECRET_KEY) {
+    return { success: false, message: "Turnstile secret key missing in Cloudflare variables." };
+  }
+
+  if (!token) {
+    return { success: false, message: "Complete the security check first." };
+  }
+
+  const formData = new FormData();
+  formData.append("secret", env.TURNSTILE_SECRET_KEY);
+  formData.append("response", token);
+  formData.append("remoteip", getClientIp(request));
+
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!data.success) {
+    return { success: false, message: "Security check failed. Refresh and try again." };
+  }
+
+  return { success: true };
+}
+
+function loginPage(env, error = "") {
+  const siteKey = env.TURNSTILE_SITE_KEY || "";
+  const turnstileHtml = siteKey
+    ? `<div class="cf-turnstile" data-sitekey="${siteKey}" data-theme="dark"></div>`
+    : `<div class="err">Turnstile site key missing in Cloudflare variables.</div>`;
+
   return `<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Royal Owner Login</title>
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
     :root { color-scheme: dark; font-family: Inter, system-ui, Arial, sans-serif; }
     body {
@@ -84,7 +117,7 @@ function loginPage(error = "") {
       color: #f4f4fb;
     }
     .box {
-      width: min(92vw, 410px); padding: 32px; border-radius: 22px;
+      width: min(92vw, 420px); padding: 32px; border-radius: 22px;
       background: rgba(20,20,31,.92); border: 1px solid rgba(255,255,255,.1);
       box-shadow: 0 24px 70px rgba(0,0,0,.55);
     }
@@ -95,6 +128,7 @@ function loginPage(error = "") {
       border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05);
       color: #fff; outline: none; font-size: 15px; margin-bottom: 12px;
     }
+    .turnstile-wrap { display: flex; justify-content: center; margin: 10px 0 16px; min-height: 65px; }
     button {
       width: 100%; padding: 13px 16px; border: 0; border-radius: 12px;
       background: linear-gradient(120deg,#7c5cff,#6741e0); color: white;
@@ -106,8 +140,9 @@ function loginPage(error = "") {
 <body>
   <form class="box" method="POST" action="/royal-owner-panel">
     <h1>Royal Owner Login</h1>
-    <p>Owner-only admin. The real admin panel is not sent to the browser until this server-side login is correct.</p>
+    <p>Owner-only admin. Complete the security check, then enter the owner password.</p>
     <input name="password" type="password" placeholder="Owner password" autocomplete="current-password" autofocus>
+    <div class="turnstile-wrap">${turnstileHtml}</div>
     <button type="submit">Open Admin Panel</button>
     <div class="err">${error}</div>
   </form>
@@ -120,12 +155,10 @@ export async function onRequest(context) {
   const url = new URL(request.url);
   const path = url.pathname;
 
-  // Hide old obvious admin route completely.
   if (OLD_ADMIN_PATHS.has(path)) {
     return html("Not found", 404);
   }
 
-  // Only protect the owner panel path. Public site and API continue normally.
   if (!OWNER_PATHS.has(path)) {
     return next();
   }
@@ -133,15 +166,22 @@ export async function onRequest(context) {
   if (request.method === "POST") {
     const limited = await checkRateLimit(request, env);
     if (!limited.allowed) {
-      return html(loginPage("Too many attempts. Wait 10 minutes and try again."), 429);
+      return html(loginPage(env, "Too many attempts. Wait 10 minutes and try again."), 429);
     }
 
     const form = await request.formData();
+    const turnstileToken = String(form.get("cf-turnstile-response") || "");
+    const turnstile = await verifyTurnstile(request, turnstileToken, env);
+
+    if (!turnstile.success) {
+      return html(loginPage(env, turnstile.message), 403);
+    }
+
     const provided = String(form.get("password") || "");
     const realPassword = env.ADMIN_PASSWORD || "royal";
 
     if (provided !== realPassword) {
-      return html(loginPage("Wrong password."), 401);
+      return html(loginPage(env, "Wrong password."), 401);
     }
 
     const token = await sessionToken(env);
@@ -158,7 +198,7 @@ export async function onRequest(context) {
   const current = getCookie(request, "royal_owner_session");
 
   if (current !== expected) {
-    return html(loginPage(""));
+    return html(loginPage(env, ""));
   }
 
   return next();
