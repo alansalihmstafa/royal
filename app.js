@@ -83,6 +83,20 @@ function applySettings() {
 }
 
 async function loadSettings() {
+    try {
+        const response = await fetch("/api/settings", { cache: "no-store" });
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.success && data.settings) {
+                settings = Object.assign({}, DEFAULT_SETTINGS, data.settings);
+                applySettings();
+                return;
+            }
+        }
+    } catch (error) {
+        // No backend settings available, fall through to local/static sources.
+    }
+
     const local = readJson(SETTINGS_KEY);
     if (local && typeof local === "object") {
         settings = Object.assign({}, DEFAULT_SETTINGS, local);

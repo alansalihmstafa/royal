@@ -221,7 +221,7 @@
         <button onclick="login()" style="width:100%;">Login</button>
         <div class="error" id="loginError"></div>
         <p class="small" style="margin-top:18px;text-align:center;">
-            Default passcode <b>royal</b>. Apps are saved live to Cloudflare KV.
+            Default passcode <b>royal</b>. Apps and settings are saved live to Cloudflare KV.
         </p>
     </div>
 </div>
@@ -327,7 +327,7 @@
             <div class="layout">
                 <div class="panel">
                     <h2>Site Settings</h2>
-                    <p class="small">Customize how the website looks. Saved in this browser — use Export settings.json to publish.</p>
+                    <p class="small">Customize how the website looks. Settings are saved live to Cloudflare KV.</p>
 
                     <label class="field-label">Site name</label>
                     <input id="setTitle" placeholder="Royal" />
@@ -380,8 +380,6 @@
     const successMessage = document.getElementById("successMessage");
     const errorMessage = document.getElementById("errorMessage");
 
-    const SETTINGS_KEY = "royalSettings";
-
     const DEFAULT_SETTINGS = {
         title: "Royal",
         tagline: "Premium desktop applications, tools, and software downloads.",
@@ -417,38 +415,28 @@
         errorMessage.textContent = success ? "" : message;
     }
 
-    async function apiRequest(method = "GET", payload = null) {
-        const options = {
-            method,
-            headers: {
-                "Content-Type": "application/json",
-                "x-admin-password": adminPassword
-            }
-        };
+    async function apiJson(url, method = "GET", payload = null, requireAdmin = false) {
+        const headers = { "Content-Type": "application/json" };
+        if (requireAdmin || adminPassword) headers["x-admin-password"] = adminPassword;
+        const options = { method, headers, cache: "no-store" };
         if (payload) options.body = JSON.stringify(payload);
-
-        const response = await fetch("/api/apps", options);
+        const response = await fetch(url, options);
         const data = await response.json().catch(() => ({}));
-
-        if (!response.ok || !data.success) {
-            throw new Error(data.message || `API failed: ${response.status}`);
-        }
-
+        if (!response.ok || !data.success) throw new Error(data.message || `Request failed: ${response.status}`);
         return data;
     }
 
     async function login() {
         const password = document.getElementById("adminPassword").value.trim();
         if (!password) { loginError.textContent = "Enter admin passcode"; return; }
-
         adminPassword = password;
         try {
-            await apiRequest("GET");
+            await apiJson("/api/apps", "GET", null, true);
             sessionStorage.setItem("royalAdminPassword", password);
             loginError.textContent = "";
             loginScreen.style.display = "none";
             dashboard.style.display = "block";
-            loadSettings();
+            await loadSettings();
             await loadApps();
         } catch (error) {
             adminPassword = "";
@@ -475,7 +463,7 @@
     function handleImage(event, kind) {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
-        const maxDim = kind === "banner" ? 1400 : 320;
+        const maxDim = kind === "banner" ? 1600 : 420;
         const reader = new FileReader();
         reader.onload = function (e) {
             const img = new Image();
@@ -557,18 +545,17 @@
 
     async function loadApps() {
         try {
-            const data = await apiRequest("GET");
+            const data = await apiJson("/api/apps", "GET", null, false);
             apps = data.apps || [];
             renderApps();
         } catch (error) {
-            document.getElementById("appsList").innerHTML = `<p class="small">Failed to load apps: ${escapeHtml(error.message)}</p>`;
+            document.getElementById("appsList").innerHTML = `<p class='small'>Failed to load apps: ${escapeHtml(error.message)}</p>`;
         }
     }
 
     async function saveApp() {
         const editId = document.getElementById("editId").value;
         const existing = editId ? apps.find(a => a.id === editId) : null;
-
         const payload = {
             id: editId || undefined,
             name: document.getElementById("appName").value.trim(),
@@ -583,21 +570,17 @@
             releaseNotes: document.getElementById("appNotes").value.trim(),
             downloadUrl: document.getElementById("appDownload").value.trim()
         };
-
         if (!payload.name || !payload.version || !payload.description || !payload.downloadUrl) {
             showMessage(false, "Fill app name, version, description, and download link.");
             return;
         }
-
         try {
-            const data = await apiRequest(editId ? "PUT" : "POST", payload);
+            const data = await apiJson("/api/apps", editId ? "PUT" : "POST", payload, true);
             apps = data.apps || [];
             clearForm();
             renderApps();
             showMessage(true, editId ? "App updated live." : "App published live.");
-        } catch (error) {
-            showMessage(false, error.message);
-        }
+        } catch (error) { showMessage(false, error.message); }
     }
 
     function editApp(id) {
@@ -605,10 +588,10 @@
         if (!app) return;
         document.getElementById("formTitle").textContent = "Edit App";
         document.getElementById("editId").value = app.id;
-        document.getElementById("appName").value = app.name;
-        document.getElementById("appVersion").value = app.version;
+        document.getElementById("appName").value = app.name || "";
+        document.getElementById("appVersion").value = app.version || "";
         document.getElementById("appIcon").value = app.icon || "";
-        document.getElementById("appDescription").value = app.description;
+        document.getElementById("appDescription").value = app.description || "";
         document.getElementById("appTrailer").value = app.trailer || "";
         document.getElementById("appNotes").value = app.releaseNotes || "";
         document.getElementById("appDownload").value = app.downloadUrl || "";
@@ -625,26 +608,21 @@
     async function deleteApp(id) {
         if (!confirm("Delete this app from the live website?")) return;
         try {
-            const data = await apiRequest("DELETE", { id });
+            const data = await apiJson("/api/apps", "DELETE", { id }, true);
             apps = data.apps || [];
             renderApps();
             showMessage(true, "App deleted live.");
-        } catch (error) {
-            showMessage(false, error.message);
-        }
+        } catch (error) { showMessage(false, error.message); }
     }
 
     async function toggleFeatured(id) {
         const app = apps.find(a => a.id === id);
         if (!app) return;
-        const updated = Object.assign({}, app, { featured: !app.featured });
         try {
-            const data = await apiRequest("PUT", updated);
+            const data = await apiJson("/api/apps", "PUT", Object.assign({}, app, { featured: !app.featured }), true);
             apps = data.apps || [];
             renderApps();
-        } catch (error) {
-            showMessage(false, error.message);
-        }
+        } catch (error) { showMessage(false, error.message); }
     }
 
     function clearForm() {
@@ -658,10 +636,7 @@
         document.getElementById("appNotes").value = "";
         document.getElementById("appDownload").value = "";
         document.getElementById("appFeatured").checked = false;
-        clearImage("icon");
-        clearImage("banner");
-        screenshotData = [];
-        renderShotThumbs();
+        clearImage("icon"); clearImage("banner"); screenshotData = []; renderShotThumbs();
     }
 
     function renderApps() {
@@ -678,6 +653,7 @@
             const shotN = Array.isArray(app.screenshots) ? app.screenshots.length : 0;
             const tags = [];
             if (app.featured) tags.push('<span class="badge">In slideshow</span>');
+            if (app.banner) tags.push('<span class="badge">Banner</span>');
             if (shotN) tags.push(`<span class="badge">${shotN} screenshot${shotN > 1 ? "s" : ""}</span>`);
             if (app.trailer) tags.push('<span class="badge">Trailer</span>');
             item.innerHTML = `
@@ -690,8 +666,7 @@
                         <button class="ghost" onclick="toggleFeatured('${escapeHtml(app.id)}')">${app.featured ? 'Remove from slideshow' : 'Add to slideshow'}</button>
                         <button class="danger" onclick="deleteApp('${escapeHtml(app.id)}')">Delete</button>
                     </div>
-                </div>
-            `;
+                </div>`;
             appsList.appendChild(item);
         });
     }
@@ -704,27 +679,20 @@
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
-
-    function exportApps() {
-        download("apps.json", JSON.stringify({ apps }, null, 2));
-        showMessage(true, "Downloaded backup apps.json.");
-    }
-
+    function exportApps() { download("apps-backup.json", JSON.stringify({ apps }, null, 2)); showMessage(true, "Downloaded backup JSON."); }
     async function copyApps() {
-        try {
-            await navigator.clipboard.writeText(JSON.stringify({ apps }, null, 2));
-            showMessage(true, "apps JSON copied to clipboard.");
-        } catch (error) {
-            showMessage(false, "Could not copy. Use Export instead.");
-        }
+        try { await navigator.clipboard.writeText(JSON.stringify({ apps }, null, 2)); showMessage(true, "Apps JSON copied."); }
+        catch { showMessage(false, "Could not copy. Use Export instead."); }
     }
 
-    function loadSettings() {
+    async function loadSettings() {
         try {
-            const raw = localStorage.getItem(SETTINGS_KEY);
-            settings = raw ? Object.assign({}, DEFAULT_SETTINGS, JSON.parse(raw)) : Object.assign({}, DEFAULT_SETTINGS);
+            const data = await apiJson("/api/settings", "GET", null, false);
+            settings = Object.assign({}, DEFAULT_SETTINGS, data.settings || {});
         } catch (error) {
             settings = Object.assign({}, DEFAULT_SETTINGS);
+            const msg = document.getElementById("settingsMessage");
+            if (msg) msg.textContent = "Using default settings until /api/settings is deployed.";
         }
         document.getElementById("setTitle").value = settings.title;
         document.getElementById("setTagline").value = settings.tagline;
@@ -739,52 +707,43 @@
     function syncAccent(source) {
         const colorEl = document.getElementById("setAccentColor");
         const hexEl = document.getElementById("setAccentHex");
-        if (source === "color") { hexEl.value = colorEl.value; }
+        if (source === "color") hexEl.value = colorEl.value;
         else {
             let v = hexEl.value.trim();
             if (/^#?[0-9a-fA-F]{6}$/.test(v)) { if (v[0] !== "#") v = "#" + v; colorEl.value = v; }
         }
         applyAccentPreview(colorEl.value);
     }
-
     function applyAccentPreview(hex) {
         document.documentElement.style.setProperty("--accent", hex);
         document.documentElement.style.setProperty("--accent-rgb", hexToRgb(hex));
     }
-
-    function saveSettings() {
+    async function saveSettings() {
         const accent = document.getElementById("setAccentColor").value;
         settings = {
             title: document.getElementById("setTitle").value.trim() || "Royal",
             tagline: document.getElementById("setTagline").value.trim(),
-            accent: accent,
+            accent,
             carouselInterval: Math.max(2, Number(document.getElementById("setInterval").value) || 5),
             discord: document.getElementById("setDiscord").value.trim() || DEFAULT_SETTINGS.discord,
             footer: document.getElementById("setFooter").value.trim() || DEFAULT_SETTINGS.footer
         };
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-        applyAccentPreview(accent);
-        document.getElementById("settingsMessage").textContent = "Settings saved in this browser. Export settings.json if you want to deploy them globally.";
+        try {
+            const data = await apiJson("/api/settings", "PUT", settings, true);
+            settings = Object.assign({}, DEFAULT_SETTINGS, data.settings || settings);
+            applyAccentPreview(settings.accent);
+            document.getElementById("settingsMessage").textContent = "Settings saved live.";
+        } catch (error) {
+            document.getElementById("settingsMessage").textContent = "Settings save failed: " + error.message;
+        }
     }
-
-    function exportSettings() {
-        saveSettings();
-        download("settings.json", JSON.stringify(settings, null, 2));
-        document.getElementById("settingsMessage").textContent = "Downloaded settings.json backup.";
-    }
-
-    function resetSettings() {
-        settings = Object.assign({}, DEFAULT_SETTINGS);
-        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-        loadSettings();
-        document.getElementById("settingsMessage").textContent = "Settings reset to default.";
-    }
+    function exportSettings() { download("settings-backup.json", JSON.stringify(settings, null, 2)); document.getElementById("settingsMessage").textContent = "Downloaded settings backup."; }
+    async function resetSettings() { settings = Object.assign({}, DEFAULT_SETTINGS); await saveSettings(); await loadSettings(); document.getElementById("settingsMessage").textContent = "Settings reset live."; }
 
     if (adminPassword) {
         loginScreen.style.display = "none";
         dashboard.style.display = "block";
-        loadSettings();
-        loadApps();
+        loadSettings(); loadApps();
     }
 </script>
 </body>
