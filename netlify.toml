@@ -1,8 +1,0 @@
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-
-[[redirects]]
-  from = "/api/apps"
-  to = "/.netlify/functions/apps"
-  status = 200
