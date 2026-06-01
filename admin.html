@@ -3,230 +3,220 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Royal Admin</title>
-
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --bg: #0a0a0f;
+            --surface: #14141f;
+            --surface-2: #1a1a28;
+            --border: rgba(255, 255, 255, 0.08);
+            --border-strong: rgba(255, 255, 255, 0.16);
+            --text: #edeef5;
+            --muted: #9aa0b4;
+            --accent: #7c5cff;
+            --accent-rgb: 124, 92, 255;
+            --accent-2: #b59bff;
+            --radius: 16px;
+            --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: #050505;
-            color: white;
-            font-family: "Segoe UI", Arial, sans-serif;
+            background:
+                radial-gradient(1000px 600px at 85% -10%, rgba(var(--accent-rgb), 0.18), transparent 60%),
+                var(--bg);
+            color: var(--text);
+            font-family: var(--font);
             min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
-        .login-screen {
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 30px;
-        }
-
-        .login-box {
+        input, textarea, select {
             width: 100%;
-            max-width: 390px;
-            background: #101010;
-            border: 1px solid rgba(0, 255, 136, 0.45);
-            border-radius: 22px;
-            padding: 30px;
-            box-shadow: 0 0 35px rgba(0, 255, 136, 0.25);
-        }
-
-        .login-box h1 {
-            text-align: center;
-            color: #00ff88;
-            margin-bottom: 25px;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
-        }
-
-        input,
-        textarea {
-            width: 100%;
-            padding: 14px;
-            margin-bottom: 14px;
-            background: #050505;
-            color: white;
-            border: 1px solid rgba(0, 255, 136, 0.35);
-            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            border: 1px solid var(--border-strong);
+            border-radius: 10px;
             outline: none;
+            font-family: var(--font);
+            font-size: 14px;
+            transition: 0.2s;
         }
 
-        textarea {
-            height: 100px;
-            resize: vertical;
+        input:focus, textarea:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.16);
         }
 
-        button,
-        .btn {
-            display: inline-block;
-            padding: 13px 18px;
-            border-radius: 12px;
+        textarea { min-height: 90px; resize: vertical; }
+        label.field-label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; font-weight: 600; }
+
+        button, .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 10px;
             border: none;
-            background: #00ff88;
-            color: #000;
-            font-weight: 900;
+            background: linear-gradient(120deg, var(--accent), #6741e0);
+            color: #fff;
+            font-weight: 700;
+            font-size: 14px;
             cursor: pointer;
             text-align: center;
             text-decoration: none;
-            margin: 5px;
+            transition: 0.2s;
+            font-family: var(--font);
         }
 
-        button:hover,
-        .btn:hover {
-            box-shadow: 0 0 25px rgba(0, 255, 136, 0.7);
+        button:hover, .btn:hover { transform: translateY(-2px); }
+        .danger { background: linear-gradient(120deg, #ef4444, #b91c1c); }
+        .ghost {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+            border: 1px solid var(--border-strong);
         }
+        .ghost:hover { border-color: var(--accent); }
 
-        .danger {
-            background: #ff4d4d;
-            color: #000;
+        .login-screen { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 24px; }
+        .login-box {
+            width: 100%; max-width: 380px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 34px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
         }
-
-        .dark-btn {
-            background: #151515;
-            color: #00ff88;
-            border: 1px solid rgba(0, 255, 136, 0.35);
+        .login-box .brand {
+            text-align: center; font-size: 28px; font-weight: 800; letter-spacing: 1px;
+            background: linear-gradient(120deg, #fff, var(--accent-2));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
         }
+        .login-box .sub { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 22px; }
 
-        .error {
-            color: #ff4d4d;
-            text-align: center;
-            margin-top: 12px;
-            min-height: 20px;
+        .error { color: #fca5a5; text-align: center; margin-top: 10px; min-height: 20px; font-size: 14px; }
+        .success { color: #86efac; text-align: center; margin-top: 10px; min-height: 20px; font-size: 14px; }
+
+        .dashboard { display: none; }
+        header.bar {
+            display: flex; justify-content: space-between; align-items: center;
+            background: rgba(10, 10, 16, 0.7);
+            backdrop-filter: blur(12px);
+            padding: 16px 6%;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap; gap: 12px;
+            position: sticky; top: 0; z-index: 30;
         }
-
-        .success {
-            color: #00ff88;
-            text-align: center;
-            margin-top: 12px;
-            min-height: 20px;
+        header.bar .brand {
+            font-size: 22px; font-weight: 800; letter-spacing: 1px;
+            background: linear-gradient(120deg, #fff, var(--accent-2));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
         }
+        header.bar .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 
-        .dashboard {
-            display: none;
+        .container { padding: 28px 6%; max-width: 1280px; margin: 0 auto; }
+
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab {
+            padding: 10px 20px; border-radius: 999px; cursor: pointer;
+            background: rgba(255, 255, 255, 0.04); color: var(--muted);
+            border: 1px solid var(--border); font-weight: 600; font-size: 14px;
         }
+        .tab.active { background: rgba(var(--accent-rgb), 0.18); color: var(--accent-2); border-color: rgba(var(--accent-rgb), 0.5); }
 
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #101010;
-            padding: 20px 8%;
-            border-bottom: 1px solid rgba(0, 255, 136, 0.35);
-            flex-wrap: wrap;
-            gap: 15px;
+        .layout { display: grid; grid-template-columns: 440px 1fr; gap: 24px; align-items: start; }
+        .panel {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
         }
+        .panel h2 { font-size: 20px; margin-bottom: 18px; }
+        .small { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
 
-        header h1 {
-            color: #00ff88;
-            text-shadow: 0 0 20px rgba(0, 255, 136, 0.8);
+        /* file upload */
+        .uploader { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+        .thumb {
+            width: 68px; height: 68px; border-radius: 14px; flex-shrink: 0;
+            background: rgba(var(--accent-rgb), 0.1);
+            border: 1px solid var(--border-strong);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 26px; color: var(--muted); overflow: hidden;
         }
-
-        .container {
-            padding: 35px 8%;
+        .thumb.wide { width: 120px; height: 68px; }
+        .thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .uploader-actions { flex: 1; }
+        .file-btn {
+            display: inline-block; cursor: pointer; font-size: 13px;
+            padding: 10px 14px; border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-strong);
+            color: var(--text); font-weight: 600;
         }
+        .file-btn:hover { border-color: var(--accent); }
+        .file-btn input { display: none; }
+        .remove-img { font-size: 12px; color: #fca5a5; cursor: pointer; margin-left: 10px; background: none; border: none; padding: 0; }
 
-        .warning {
-            background: rgba(0, 255, 136, 0.08);
-            border: 1px solid rgba(0, 255, 136, 0.35);
-            color: #b6ffd8;
-            padding: 18px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            line-height: 1.6;
+        .shot-thumbs { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+        .shot-thumb { position: relative; width: 84px; height: 84px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border-strong); background: rgba(255,255,255,0.04); }
+        .shot-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .shot-x {
+            position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; padding: 0;
+            border-radius: 50%; border: none; background: rgba(10,10,16,0.8); color: #fff;
+            font-size: 15px; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center;
         }
+        .shot-x:hover { background: #ef4444; transform: none; }
+        .shot-empty { font-size: 13px; color: var(--muted); }
 
-        .layout {
-            display: grid;
-            grid-template-columns: 420px 1fr;
-            gap: 25px;
-        }
+        .row { display: flex; gap: 12px; }
+        .row > * { flex: 1; }
 
-        .panel,
-        .preview {
-            background: #101010;
-            border: 1px solid rgba(0, 255, 136, 0.35);
-            border-radius: 20px;
-            padding: 22px;
-        }
+        .check { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; cursor: pointer; }
+        .check input { width: auto; margin: 0; }
+        .check span { font-size: 14px; }
 
-        .panel h2,
-        .preview h2 {
-            color: #00ff88;
-            margin-bottom: 18px;
-        }
+        .color-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .color-row input[type="color"] { width: 52px; height: 44px; padding: 4px; margin: 0; cursor: pointer; }
 
-        .small {
-            font-size: 13px;
-            color: #888;
-            line-height: 1.5;
-            margin-bottom: 14px;
-        }
-
-        .apps-list {
-            display: grid;
-            gap: 16px;
-        }
-
+        .apps-list { display: grid; gap: 14px; }
         .app-item {
-            background: #050505;
-            border: 1px solid rgba(0, 255, 136, 0.25);
-            border-radius: 15px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 14px;
             padding: 16px;
+            display: flex; gap: 14px; align-items: flex-start;
         }
+        .app-item .ic {
+            width: 52px; height: 52px; border-radius: 12px; flex-shrink: 0;
+            background: rgba(var(--accent-rgb), 0.12); border: 1px solid var(--border-strong);
+            display: flex; align-items: center; justify-content: center; font-size: 24px; overflow: hidden;
+        }
+        .app-item .ic img { width: 100%; height: 100%; object-fit: cover; }
+        .app-item .info { flex: 1; min-width: 0; }
+        .app-item h3 { font-size: 16px; margin-bottom: 4px; }
+        .app-item .meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; word-break: break-word; }
+        .badge {
+            display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px;
+            background: rgba(var(--accent-rgb), 0.18); color: var(--accent-2); border: 1px solid rgba(var(--accent-rgb), 0.4);
+            margin-left: 6px;
+        }
+        .app-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+        .app-actions button { padding: 8px 12px; font-size: 13px; }
 
-        .app-item h3 {
-            color: #00ff88;
-            margin-bottom: 8px;
-        }
-
-        .app-item p {
-            color: #bbb;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .app-actions {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .app-actions button,
-        .app-actions a {
-            margin: 0;
-            font-size: 13px;
-            padding: 9px 12px;
-        }
-
-        code {
-            display: block;
-            background: #050505;
-            color: #00ff88;
-            padding: 12px;
-            border-radius: 10px;
-            overflow-x: auto;
-            margin-top: 10px;
-            margin-bottom: 15px;
-        }
+        .export-row { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+        .export-row button { font-size: 13px; }
 
         @media (max-width: 950px) {
-            .layout {
-                grid-template-columns: 1fr;
-            }
-
-            header {
-                padding: 20px;
-            }
-
-            .container {
-                padding: 25px 20px;
-            }
+            .layout { grid-template-columns: 1fr; }
+            .container { padding: 22px 18px; }
+            header.bar { padding: 14px 18px; }
         }
     </style>
 </head>
@@ -235,84 +225,165 @@
 
 <div class="login-screen" id="loginScreen">
     <div class="login-box">
-        <h1>Royal Admin</h1>
-
-        <input type="password" id="adminPassword" placeholder="Admin password" />
-
-        <button onclick="login()" style="width:100%;">
-            Login
-        </button>
-
+        <div class="brand">ROYAL</div>
+        <div class="sub">Admin Panel</div>
+        <input type="password" id="adminPassword" placeholder="Admin passcode" onkeydown="if(event.key==='Enter')login()" />
+        <button onclick="login()" style="width:100%;">Login</button>
         <div class="error" id="loginError"></div>
-
-        <p class="small">
-            Password is checked by Netlify Function, not stored in this file.
+        <p class="small" style="margin-top:18px;text-align:center;">
+            Default passcode <b>royal</b>. Changes are saved in this browser — use Export to publish to everyone.
         </p>
     </div>
 </div>
 
 <div class="dashboard" id="dashboard">
-    <header>
-        <h1>Royal Admin</h1>
-
-        <div>
-            <a class="btn dark-btn" href="index.html">
-                View Website
-            </a>
-
-            <a class="btn dark-btn" href="https://github.com/alansalihmstafa/royal/releases" target="_blank">
-                GitHub Releases
-            </a>
-
-            <button onclick="logout()">
-                Logout
-            </button>
+    <header class="bar">
+        <div class="brand">ROYAL ADMIN</div>
+        <div class="actions">
+            <a class="btn ghost" href="index.html">View Website</a>
+            <a class="btn ghost" href="https://github.com/alansalihmstafa/royal/releases" target="_blank">GitHub Releases</a>
+            <button class="ghost" onclick="logout()">Logout</button>
         </div>
     </header>
 
     <div class="container">
-        <div class="warning">
-            Create your EXE on GitHub Releases, copy the direct download link, paste it here, then click Publish.
-            The app list saves permanently to Netlify Blobs.
+        <div class="tabs">
+            <div class="tab active" id="tabAppsBtn" onclick="switchTab('apps')">Apps</div>
+            <div class="tab" id="tabSettingsBtn" onclick="switchTab('settings')">Site Settings</div>
         </div>
 
-        <div class="layout">
-            <div class="panel">
-                <h2 id="formTitle">Add New App</h2>
+        <!-- APPS TAB -->
+        <div id="tabApps">
+            <div class="layout">
+                <div class="panel">
+                    <h2 id="formTitle">Add New App</h2>
+                    <input type="hidden" id="editId" />
 
-                <input type="hidden" id="editId" />
+                    <label class="field-label">App name</label>
+                    <input id="appName" placeholder="example: ChessBot Royal" />
 
-                <input id="appName" placeholder="App name, example: ChessBot" />
+                    <label class="field-label">Version</label>
+                    <input id="appVersion" placeholder="example: 1.0.0" />
 
-                <input id="appVersion" placeholder="Version, example: 1.0.0" />
+                    <label class="field-label">App icon / logo (choose from your device)</label>
+                    <div class="uploader">
+                        <div class="thumb" id="iconThumb">★</div>
+                        <div class="uploader-actions">
+                            <label class="file-btn">
+                                Choose icon
+                                <input type="file" accept="image/*" onchange="handleImage(event, 'icon')" />
+                            </label>
+                            <button type="button" class="remove-img" onclick="clearImage('icon')">Remove</button>
+                        </div>
+                    </div>
 
-                <input id="appIcon" placeholder="Emoji icon, example: ♟ or ⚙" />
+                    <label class="field-label">Emoji icon (optional, used if no image)</label>
+                    <input id="appIcon" placeholder="example: ♟ or 👑" />
 
-                <input id="appImage" placeholder="Icon image URL, optional" />
+                    <label class="field-label">Banner / cover photo for top slideshow (choose from your device)</label>
+                    <div class="uploader">
+                        <div class="thumb wide" id="bannerThumb">🖼</div>
+                        <div class="uploader-actions">
+                            <label class="file-btn">
+                                Choose photo
+                                <input type="file" accept="image/*" onchange="handleImage(event, 'banner')" />
+                            </label>
+                            <button type="button" class="remove-img" onclick="clearImage('banner')">Remove</button>
+                        </div>
+                    </div>
 
-                <textarea id="appDescription" placeholder="App description"></textarea>
+                    <label class="check">
+                        <input type="checkbox" id="appFeatured" />
+                        <span>Show this app in the top slideshow</span>
+                    </label>
 
-                <textarea id="appNotes" placeholder="Release notes"></textarea>
+                    <label class="field-label">Description</label>
+                    <textarea id="appDescription" placeholder="What does this app do?"></textarea>
 
-                <input id="appDownload" placeholder="GitHub Release direct EXE download link" />
+                    <label class="field-label">Screenshots / demo images (choose one or more from your device)</label>
+                    <div class="uploader-actions" style="margin-bottom:10px;">
+                        <label class="file-btn">
+                            Choose screenshots
+                            <input type="file" accept="image/*" multiple onchange="handleScreens(event)" />
+                        </label>
+                    </div>
+                    <div class="shot-thumbs" id="shotThumbs"><span class="shot-empty">No screenshots added yet.</span></div>
 
-                <button onclick="saveApp()" style="width:100%;">
-                    Publish
-                </button>
+                    <label class="field-label">Trailer / demo video link (YouTube, Vimeo, or .mp4)</label>
+                    <input id="appTrailer" placeholder="https://youtu.be/..." />
 
-                <button onclick="clearForm()" class="dark-btn" style="width:100%;">
-                    Clear Form
-                </button>
+                    <label class="field-label">Release notes</label>
+                    <textarea id="appNotes" placeholder="What's new in this version?"></textarea>
 
-                <div class="success" id="successMessage"></div>
-                <div class="error" id="errorMessage"></div>
+                    <label class="field-label">Download link (direct EXE / release URL)</label>
+                    <input id="appDownload" placeholder="https://github.com/.../releases/download/..." />
+
+                    <button onclick="saveApp()" style="width:100%;">Publish App</button>
+                    <button onclick="clearForm()" class="ghost" style="width:100%;margin-top:8px;">Clear Form</button>
+
+                    <div class="success" id="successMessage"></div>
+                    <div class="error" id="errorMessage"></div>
+                </div>
+
+                <div class="panel">
+                    <h2>Published Apps</h2>
+                    <p class="small">Apps are saved in this browser. Click <b>Export apps.json</b> and commit it (or send it to me) to publish to every visitor.</p>
+                    <div class="export-row">
+                        <button class="ghost" onclick="exportApps()">Export apps.json</button>
+                        <button class="ghost" onclick="copyApps()">Copy JSON</button>
+                    </div>
+                    <div class="apps-list" id="appsList">Loading apps...</div>
+                </div>
             </div>
+        </div>
 
-            <div class="preview">
-                <h2>Live Apps</h2>
+        <!-- SETTINGS TAB -->
+        <div id="tabSettings" style="display:none;">
+            <div class="layout">
+                <div class="panel">
+                    <h2>Site Settings</h2>
+                    <p class="small">Customize how the website looks. Saved in this browser — use Export settings.json to publish.</p>
 
-                <div class="apps-list" id="appsList">
-                    Loading apps...
+                    <label class="field-label">Site name</label>
+                    <input id="setTitle" placeholder="Royal" />
+
+                    <label class="field-label">Tagline (under "Featured Applications")</label>
+                    <input id="setTagline" placeholder="Premium desktop applications..." />
+
+                    <label class="field-label">Accent color</label>
+                    <div class="color-row">
+                        <input type="color" id="setAccentColor" value="#7c5cff" oninput="syncAccent('color')" />
+                        <input id="setAccentHex" placeholder="#7c5cff" oninput="syncAccent('hex')" style="margin:0;" />
+                    </div>
+                    <div class="row">
+                        <div>
+                            <label class="field-label">Slideshow speed (seconds)</label>
+                            <input id="setInterval" type="number" min="2" max="30" value="5" />
+                        </div>
+                    </div>
+
+                    <label class="field-label">Discord invite link (Contact button)</label>
+                    <input id="setDiscord" placeholder="https://discord.gg/QpmxAKQrD" />
+
+                    <label class="field-label">Footer text</label>
+                    <input id="setFooter" placeholder="© 2026 Royal. All rights reserved." />
+
+                    <button onclick="saveSettings()" style="width:100%;">Save Settings</button>
+                    <div class="export-row" style="margin-top:14px;">
+                        <button class="ghost" onclick="exportSettings()">Export settings.json</button>
+                        <button class="ghost" onclick="resetSettings()">Reset to default</button>
+                    </div>
+                    <div class="success" id="settingsMessage"></div>
+                </div>
+
+                <div class="panel">
+                    <h2>Theme Preview</h2>
+                    <p class="small">A quick preview of the accent color on buttons and chips.</p>
+                    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:10px;">
+                        <button id="previewBtn">Download</button>
+                        <span class="badge" style="font-size:13px;">Featured App</span>
+                    </div>
+                    <div style="margin-top:20px;height:120px;border-radius:14px;border:1px solid var(--border);background:radial-gradient(500px 200px at 70% 20%, rgba(var(--accent-rgb),0.5), transparent 60%), linear-gradient(135deg,#1a1a28,#0a0a0f);"></div>
                 </div>
             </div>
         </div>
@@ -326,84 +397,194 @@
     const successMessage = document.getElementById("successMessage");
     const errorMessage = document.getElementById("errorMessage");
 
+    const STORAGE_KEY = "royalApps";
+    const SETTINGS_KEY = "royalSettings";
+    const ADMIN_PASSCODE = "royal";
+
+    const DEFAULT_SETTINGS = {
+        title: "Royal",
+        tagline: "Premium desktop applications, tools, and software downloads.",
+        accent: "#7c5cff",
+        carouselInterval: 5,
+        footer: "© 2026 Royal. All rights reserved.",
+        discord: "https://discord.gg/QpmxAKQrD"
+    };
+
     let apps = [];
-    let adminPassword = sessionStorage.getItem("royalAdminPassword") || "";
+    let settings = Object.assign({}, DEFAULT_SETTINGS);
+    let iconData = "";   // data URL for app icon
+    let bannerData = ""; // data URL for carousel banner
+    let screenshotData = []; // array of data URLs for app screenshots
+
+    /* ---------- helpers ---------- */
+    function escapeHtml(text) {
+        return String(text || "")
+            .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;").replaceAll("'", "&#039;");
+    }
+
+    function hexToRgb(hex) {
+        const m = String(hex || "").replace("#", "");
+        const full = m.length === 3 ? m.split("").map(c => c + c).join("") : m;
+        const int = parseInt(full, 16);
+        if (Number.isNaN(int) || full.length !== 6) return "124, 92, 255";
+        return `${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}`;
+    }
 
     function showMessage(success, message) {
         successMessage.textContent = success ? message : "";
         errorMessage.textContent = success ? "" : message;
     }
 
-    async function login() {
+    function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(apps)); }
+
+    /* ---------- auth ---------- */
+    function login() {
         const password = document.getElementById("adminPassword").value.trim();
-
-        if (!password) {
-            loginError.textContent = "Enter admin password";
-            return;
-        }
-
-        try {
-            const response = await fetch("/api/apps", {
-                method: "GET",
-                headers: {
-                    "x-admin-password": password
-                }
-            });
-
-            if (!response.ok && response.status === 401) {
-                loginError.textContent = "Wrong admin password";
-                return;
-            }
-
-            adminPassword = password;
-            sessionStorage.setItem("royalAdminPassword", password);
-
-            loginScreen.style.display = "none";
-            dashboard.style.display = "block";
-
-            await loadApps();
-
-        } catch (error) {
-            loginError.textContent = "Login failed. Deploy on Netlify first.";
-        }
+        if (!password) { loginError.textContent = "Enter admin passcode"; return; }
+        if (password !== ADMIN_PASSCODE) { loginError.textContent = "Wrong admin passcode"; return; }
+        loginError.textContent = "";
+        sessionStorage.setItem("royalAdmin", "1");
+        loginScreen.style.display = "none";
+        dashboard.style.display = "block";
+        loadSettings();
+        loadApps();
     }
 
     function logout() {
-        sessionStorage.removeItem("royalAdminPassword");
-        adminPassword = "";
+        sessionStorage.removeItem("royalAdmin");
         dashboard.style.display = "none";
         loginScreen.style.display = "flex";
     }
 
+    /* ---------- tabs ---------- */
+    function switchTab(name) {
+        const isApps = name === "apps";
+        document.getElementById("tabApps").style.display = isApps ? "block" : "none";
+        document.getElementById("tabSettings").style.display = isApps ? "none" : "block";
+        document.getElementById("tabAppsBtn").classList.toggle("active", isApps);
+        document.getElementById("tabSettingsBtn").classList.toggle("active", !isApps);
+    }
+
+    /* ---------- image upload (resize on canvas, store as data URL) ---------- */
+    function handleImage(event, kind) {
+        const file = event.target.files && event.target.files[0];
+        if (!file) return;
+        const maxDim = kind === "banner" ? 1400 : 320;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const img = new Image();
+            img.onload = function () {
+                let w = img.width, h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                    else { w = Math.round(w * maxDim / h); h = maxDim; }
+                }
+                const canvas = document.createElement("canvas");
+                canvas.width = w; canvas.height = h;
+                canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                const type = file.type === "image/png" ? "image/png" : "image/jpeg";
+                const dataUrl = canvas.toDataURL(type, 0.85);
+                if (kind === "banner") { bannerData = dataUrl; setThumb("bannerThumb", dataUrl); }
+                else { iconData = dataUrl; setThumb("iconThumb", dataUrl); }
+            };
+            img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function setThumb(id, dataUrl) {
+        const el = document.getElementById(id);
+        el.innerHTML = dataUrl ? `<img src="${dataUrl}" alt="">` : (id === "bannerThumb" ? "🖼" : "★");
+    }
+
+    function clearImage(kind) {
+        if (kind === "banner") { bannerData = ""; setThumb("bannerThumb", ""); }
+        else { iconData = ""; setThumb("iconThumb", ""); }
+    }
+
+    /* ---------- screenshots (multiple) ---------- */
+    function handleScreens(event) {
+        const files = Array.from(event.target.files || []);
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = new Image();
+                img.onload = function () {
+                    const maxDim = 1400;
+                    let w = img.width, h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        if (w >= h) { h = Math.round(h * maxDim / w); w = maxDim; }
+                        else { w = Math.round(w * maxDim / h); h = maxDim; }
+                    }
+                    const canvas = document.createElement("canvas");
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+                    const type = file.type === "image/png" ? "image/png" : "image/jpeg";
+                    screenshotData.push(canvas.toDataURL(type, 0.82));
+                    renderShotThumbs();
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+        event.target.value = "";
+    }
+
+    function renderShotThumbs() {
+        const el = document.getElementById("shotThumbs");
+        el.innerHTML = "";
+        if (!screenshotData.length) {
+            el.innerHTML = '<span class="shot-empty">No screenshots added yet.</span>';
+            return;
+        }
+        screenshotData.forEach((src, i) => {
+            const d = document.createElement("div");
+            d.className = "shot-thumb";
+            d.innerHTML = `<img src="${src}" alt=""><button type="button" class="shot-x" onclick="removeScreen(${i})">×</button>`;
+            el.appendChild(d);
+        });
+    }
+
+    function removeScreen(i) {
+        screenshotData.splice(i, 1);
+        renderShotThumbs();
+    }
+
+    /* ---------- apps data ---------- */
     async function loadApps() {
         try {
-            const response = await fetch("/api/apps");
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || "Failed to load apps");
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                apps = Array.isArray(parsed) ? parsed : [];
+            } else {
+                const response = await fetch("apps.json", { cache: "no-store" });
+                const data = await response.json();
+                apps = (data && data.apps) || [];
+                persist();
             }
-
-            apps = data.apps || [];
             renderApps();
-
         } catch (error) {
-            document.getElementById("appsList").innerHTML = `
-                <p class="small">Failed to load apps.</p>
-            `;
+            apps = [];
+            renderApps();
         }
     }
 
-    async function saveApp() {
+    function saveApp() {
         const editId = document.getElementById("editId").value;
+        const existing = editId ? apps.find(a => a.id === editId) : null;
 
         const payload = {
-            id: editId,
             name: document.getElementById("appName").value.trim(),
             version: document.getElementById("appVersion").value.trim(),
             icon: document.getElementById("appIcon").value.trim(),
-            image: document.getElementById("appImage").value.trim(),
+            image: iconData || (existing ? existing.image : "") || "",
+            banner: bannerData || (existing ? existing.banner : "") || "",
+            featured: document.getElementById("appFeatured").checked,
             description: document.getElementById("appDescription").value.trim(),
+            screenshots: screenshotData.slice(),
+            trailer: document.getElementById("appTrailer").value.trim(),
             releaseNotes: document.getElementById("appNotes").value.trim(),
             downloadUrl: document.getElementById("appDownload").value.trim()
         };
@@ -413,84 +594,56 @@
             return;
         }
 
-        try {
-            const response = await fetch("/api/apps", {
-                method: editId ? "PUT" : "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-admin-password": adminPassword
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || "Save failed");
-            }
-
-            apps = data.apps || apps;
-
-            clearForm();
-            await loadApps();
-
-            showMessage(true, editId ? "App updated live." : "App published live.");
-
-        } catch (error) {
-            showMessage(false, error.message);
+        if (editId && existing) {
+            const index = apps.findIndex(item => item.id === editId);
+            apps[index] = Object.assign({}, existing, payload, { id: editId });
+        } else {
+            payload.id = "app-" + Date.now().toString(36);
+            apps.push(payload);
         }
+
+        persist();
+        clearForm();
+        renderApps();
+        showMessage(true, editId ? "App updated." : "App published.");
     }
 
     function editApp(id) {
         const app = apps.find(item => item.id === id);
-
         if (!app) return;
-
         document.getElementById("formTitle").textContent = "Edit App";
         document.getElementById("editId").value = app.id;
         document.getElementById("appName").value = app.name;
         document.getElementById("appVersion").value = app.version;
         document.getElementById("appIcon").value = app.icon || "";
-        document.getElementById("appImage").value = app.image || "";
         document.getElementById("appDescription").value = app.description;
+        document.getElementById("appTrailer").value = app.trailer || "";
         document.getElementById("appNotes").value = app.releaseNotes || "";
         document.getElementById("appDownload").value = app.downloadUrl || "";
-
-        window.scrollTo({
-            top: 0,
-            behavior: "smooth"
-        });
+        document.getElementById("appFeatured").checked = !!app.featured;
+        iconData = app.image || "";
+        bannerData = app.banner || "";
+        screenshotData = Array.isArray(app.screenshots) ? app.screenshots.slice() : [];
+        setThumb("iconThumb", iconData);
+        setThumb("bannerThumb", bannerData);
+        renderShotThumbs();
+        window.scrollTo({ top: 0, behavior: "smooth" });
     }
 
-    async function deleteApp(id) {
-        const ok = confirm("Delete this app from the live website?");
+    function deleteApp(id) {
+        if (!confirm("Delete this app from the website?")) return;
+        apps = apps.filter(item => item.id !== id);
+        persist();
+        renderApps();
+        showMessage(true, "App deleted.");
+    }
 
-        if (!ok) return;
-
-        try {
-            const response = await fetch("/api/apps", {
-                method: "DELETE",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-admin-password": adminPassword
-                },
-                body: JSON.stringify({ id })
-            });
-
-            const data = await response.json();
-
-            if (!data.success) {
-                throw new Error(data.message || "Delete failed");
-            }
-
-            apps = data.apps || [];
-            renderApps();
-
-            showMessage(true, "App deleted live.");
-
-        } catch (error) {
-            showMessage(false, error.message);
-        }
+    function toggleFeatured(id) {
+        const app = apps.find(a => a.id === id);
+        if (!app) return;
+        app.featured = !app.featured;
+        persist();
+        renderApps();
     }
 
     function clearForm() {
@@ -499,72 +652,142 @@
         document.getElementById("appName").value = "";
         document.getElementById("appVersion").value = "";
         document.getElementById("appIcon").value = "";
-        document.getElementById("appImage").value = "";
         document.getElementById("appDescription").value = "";
+        document.getElementById("appTrailer").value = "";
         document.getElementById("appNotes").value = "";
         document.getElementById("appDownload").value = "";
+        document.getElementById("appFeatured").checked = false;
+        clearImage("icon");
+        clearImage("banner");
+        screenshotData = [];
+        renderShotThumbs();
     }
 
     function renderApps() {
         const appsList = document.getElementById("appsList");
-
         appsList.innerHTML = "";
-
         if (!apps || apps.length === 0) {
-            appsList.innerHTML = "<p class='small'>No apps yet.</p>";
+            appsList.innerHTML = "<p class='small'>No apps yet. Add your first app on the left.</p>";
             return;
         }
-
         apps.forEach(app => {
             const item = document.createElement("div");
             item.className = "app-item";
-
-            const icon = app.image
-                ? `<img src="${escapeHtml(app.image)}" style="width:42px;height:42px;border-radius:10px;object-fit:cover;">`
-                : escapeHtml(app.icon || "⚙");
-
+            const ic = app.image
+                ? `<img src="${escapeHtml(app.image)}" alt="">`
+                : escapeHtml(app.icon || "★");
+            const shotN = Array.isArray(app.screenshots) ? app.screenshots.length : 0;
+            const tags = [];
+            if (app.featured) tags.push('<span class="badge">In slideshow</span>');
+            if (shotN) tags.push(`<span class="badge">${shotN} screenshot${shotN > 1 ? "s" : ""}</span>`);
+            if (app.trailer) tags.push('<span class="badge">Trailer</span>');
             item.innerHTML = `
-                <h3>${icon} ${escapeHtml(app.name)}</h3>
-
-                <p>
-                    <b>Version:</b> ${escapeHtml(app.version)}
-                    <br>
-                    ${escapeHtml(app.description)}
-                </p>
-
-                <code>${escapeHtml(app.downloadUrl)}</code>
-
-                <div class="app-actions">
-                    <a class="btn" href="${escapeHtml(app.downloadUrl)}" target="_blank">
-                        Test Download
-                    </a>
-
-                    <button class="dark-btn" onclick="editApp('${app.id}')">
-                        Edit
-                    </button>
-
-                    <button class="danger" onclick="deleteApp('${app.id}')">
-                        Delete
-                    </button>
+                <div class="ic">${ic}</div>
+                <div class="info">
+                    <h3>${escapeHtml(app.name)} ${tags.join(" ")}</h3>
+                    <div class="meta">v${escapeHtml(app.version)} — ${escapeHtml(app.description)}</div>
+                    <div class="app-actions">
+                        <button class="ghost" onclick="editApp('${app.id}')">Edit</button>
+                        <button class="ghost" onclick="toggleFeatured('${app.id}')">${app.featured ? 'Remove from slideshow' : 'Add to slideshow'}</button>
+                        <button class="danger" onclick="deleteApp('${app.id}')">Delete</button>
+                    </div>
                 </div>
             `;
-
             appsList.appendChild(item);
         });
     }
 
-    function escapeHtml(text) {
-        return String(text || "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+    /* ---------- export apps ---------- */
+    function download(filename, text, type) {
+        const blob = new Blob([text], { type: type || "application/json" });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url; link.download = filename;
+        document.body.appendChild(link); link.click(); document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     }
 
-    if (adminPassword) {
+    function exportApps() {
+        download("apps.json", JSON.stringify({ apps }, null, 2));
+        showMessage(true, "Downloaded apps.json. Commit it (or send it to me) to publish to everyone.");
+    }
+
+    async function copyApps() {
+        try {
+            await navigator.clipboard.writeText(JSON.stringify({ apps }, null, 2));
+            showMessage(true, "apps.json copied to clipboard.");
+        } catch (error) {
+            showMessage(false, "Could not copy. Use Export instead.");
+        }
+    }
+
+    /* ---------- settings ---------- */
+    function loadSettings() {
+        try {
+            const raw = localStorage.getItem(SETTINGS_KEY);
+            settings = raw ? Object.assign({}, DEFAULT_SETTINGS, JSON.parse(raw)) : Object.assign({}, DEFAULT_SETTINGS);
+        } catch (error) {
+            settings = Object.assign({}, DEFAULT_SETTINGS);
+        }
+        document.getElementById("setTitle").value = settings.title;
+        document.getElementById("setTagline").value = settings.tagline;
+        document.getElementById("setAccentColor").value = settings.accent;
+        document.getElementById("setAccentHex").value = settings.accent;
+        document.getElementById("setInterval").value = settings.carouselInterval;
+        document.getElementById("setDiscord").value = settings.discord || DEFAULT_SETTINGS.discord;
+        document.getElementById("setFooter").value = settings.footer;
+        applyAccentPreview(settings.accent);
+    }
+
+    function syncAccent(source) {
+        const colorEl = document.getElementById("setAccentColor");
+        const hexEl = document.getElementById("setAccentHex");
+        if (source === "color") { hexEl.value = colorEl.value; }
+        else {
+            let v = hexEl.value.trim();
+            if (/^#?[0-9a-fA-F]{6}$/.test(v)) { if (v[0] !== "#") v = "#" + v; colorEl.value = v; }
+        }
+        applyAccentPreview(colorEl.value);
+    }
+
+    function applyAccentPreview(hex) {
+        document.documentElement.style.setProperty("--accent", hex);
+        document.documentElement.style.setProperty("--accent-rgb", hexToRgb(hex));
+    }
+
+    function saveSettings() {
+        const accent = document.getElementById("setAccentColor").value;
+        settings = {
+            title: document.getElementById("setTitle").value.trim() || "Royal",
+            tagline: document.getElementById("setTagline").value.trim(),
+            accent: accent,
+            carouselInterval: Math.max(2, Number(document.getElementById("setInterval").value) || 5),
+            discord: document.getElementById("setDiscord").value.trim() || DEFAULT_SETTINGS.discord,
+            footer: document.getElementById("setFooter").value.trim() || DEFAULT_SETTINGS.footer
+        };
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        applyAccentPreview(accent);
+        document.getElementById("settingsMessage").textContent = "Settings saved. Use Export settings.json to publish to everyone.";
+    }
+
+    function exportSettings() {
+        saveSettings();
+        download("settings.json", JSON.stringify(settings, null, 2));
+        document.getElementById("settingsMessage").textContent = "Downloaded settings.json. Commit it (or send it to me) to publish.";
+    }
+
+    function resetSettings() {
+        settings = Object.assign({}, DEFAULT_SETTINGS);
+        localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        loadSettings();
+        document.getElementById("settingsMessage").textContent = "Settings reset to default.";
+    }
+
+    /* ---------- init ---------- */
+    if (sessionStorage.getItem("royalAdmin") === "1") {
         loginScreen.style.display = "none";
         dashboard.style.display = "block";
+        loadSettings();
         loadApps();
     }
 </script>
