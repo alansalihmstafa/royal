@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Royal</title>
+    <meta name="description" content="Royal — premium desktop applications, tools, and software downloads." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="navbar">
+    <div class="logo" id="siteLogo">ROYAL</div>
+    <nav class="nav-links">
+        <a href="#apps">Apps</a>
+        <a href="#updates">Updates</a>
+        <a href="#contact">Contact</a>
+    </nav>
+    <div class="nav-right">
+        <input type="text" id="searchBar" placeholder="Search apps..." autocomplete="off" />
+    </div>
+</header>
+<section class="hero">
+    <div class="carousel" id="carousel">
+        <div class="slides" id="slides"></div>
+        <button class="carousel-btn prev" id="prevBtn" aria-label="Previous">‹</button>
+        <button class="carousel-btn next" id="nextBtn" aria-label="Next">›</button>
+        <div class="carousel-dots" id="dots"></div>
+    </div>
+</section>
+<main class="wrap">
+    <section class="section" id="apps">
+        <div class="section-title">
+            <h2>Featured Applications</h2>
+            <p id="appsSubtitle">Download the latest Royal desktop apps.</p>
+        </div>
+        <div class="apps-grid" id="appsGrid">
+            <div class="empty-box">Loading apps...</div>
+        </div>
+    </section>
+
+    <section class="section detail" id="appDetail" style="display:none;">
+        <button class="back-btn" id="backBtn">← Back to apps</button>
+        <div id="detailBody"></div>
+    </section>
+</main>
+
+<section class="section updates" id="updates">
+    <div class="wrap">
+        <div class="section-title">
+            <h2>Latest Updates</h2>
+            <p>Royal release news and app updates.</p>
+        </div>
+        <div class="updates-box" id="updatesBox"></div>
+    </div>
+</section>
+<main class="wrap">
+    <section class="section contact" id="contact">
+        <div class="section-title">
+            <h2>Contact</h2>
+            <p>Get in touch with Royal for support or updates.</p>
+        </div>
+
+        <div class="contact-buttons">
+            <a id="discordBtn" href="https://discord.gg/QpmxAKQrD" target="_blank" rel="noopener" class="contact-btn discord-btn">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M20.317 4.369A19.79 19.79 0 0 0 16.558 3.2a.07.07 0 0 0-.075.036c-.325.577-.687 1.331-.94 1.922a18.27 18.27 0 0 0-5.486 0 12.6 12.6 0 0 0-.955-1.922.07.07 0 0 0-.075-.036A19.74 19.74 0 0 0 3.677 4.37a.06.06 0 0 0-.03.024C1.222 8.041.553 11.62.879 15.156a.08.08 0 0 0 .031.054 19.9 19.9 0 0 0 5.993 3.04.07.07 0 0 0 .078-.027c.462-.63.873-1.295 1.226-1.994a.07.07 0 0 0-.038-.097 13.1 13.1 0 0 1-1.872-.892.07.07 0 0 1-.007-.117c.126-.094.252-.192.372-.291a.07.07 0 0 1 .07-.01c3.927 1.793 8.18 1.793 12.061 0a.07.07 0 0 1 .072.009c.12.099.245.198.372.292a.07.07 0 0 1-.006.117c-.598.349-1.225.645-1.873.891a.07.07 0 0 0-.038.098c.36.698.772 1.362 1.225 1.993a.07.07 0 0 0 .078.028 19.84 19.84 0 0 0 6.002-3.04.08.08 0 0 0 .032-.054c.39-4.087-.654-7.636-2.771-10.762a.06.06 0 0 0-.03-.025ZM8.02 12.998c-1.183 0-2.157-1.086-2.157-2.42 0-1.333.955-2.42 2.157-2.42 1.21 0 2.176 1.097 2.157 2.42 0 1.334-.955 2.42-2.157 2.42Zm7.975 0c-1.183 0-2.157-1.086-2.157-2.42 0-1.333.955-2.42 2.157-2.42 1.21 0 2.176 1.097 2.157 2.42 0 1.334-.946 2.42-2.157 2.42Z"/></svg>
+                Join our Discord
+            </a>
+        </div>
+    </section>
+</main>
+<footer>
+    <p id="footerText">© 2026 Royal. All rights reserved.</p>
+</footer>
+<div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose" aria-label="Close">×</button>
+    <img id="lightboxImg" src="" alt="" />
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>

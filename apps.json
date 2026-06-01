@@ -1,0 +1,46 @@
+{
+  "apps": [
+    {
+      "id": "royal-launcher",
+      "name": "Royal Launcher",
+      "version": "1.2.0",
+      "icon": "👑",
+      "image": "",
+      "banner": "",
+      "featured": true,
+      "description": "The all-in-one desktop launcher for every Royal app. Auto-updates, one-click installs, and a clean dashboard.",
+      "screenshots": [],
+      "trailer": "",
+      "releaseNotes": "Added auto-update engine and a redesigned library view.",
+      "downloadUrl": "https://github.com/alansalihmstafa/royal/releases"
+    },
+    {
+      "id": "royal-cleaner",
+      "name": "Royal Cleaner",
+      "version": "2.0.1",
+      "icon": "🧹",
+      "image": "",
+      "banner": "",
+      "featured": true,
+      "description": "Free up disk space and speed up your PC. Removes junk files, caches, and leftover installers safely.",
+      "screenshots": [],
+      "trailer": "",
+      "releaseNotes": "Faster deep-scan and a new scheduled cleanup mode.",
+      "downloadUrl": "https://github.com/alansalihmstafa/royal/releases"
+    },
+    {
+      "id": "royal-notes",
+      "name": "Royal Notes",
+      "version": "1.0.4",
+      "icon": "📝",
+      "image": "",
+      "banner": "",
+      "featured": true,
+      "description": "A fast, distraction-free notes app with markdown support and local-first storage. Your notes stay on your device.",
+      "screenshots": [],
+      "trailer": "",
+      "releaseNotes": "Markdown preview and dark-mode polish.",
+      "downloadUrl": "https://github.com/alansalihmstafa/royal/releases"
+    }
+  ]
+}
