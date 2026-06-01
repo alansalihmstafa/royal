@@ -221,7 +221,7 @@
         <button onclick="login()" style="width:100%;">Login</button>
         <div class="error" id="loginError"></div>
         <p class="small" style="margin-top:18px;text-align:center;">
-            Default passcode <b>royal</b>. Changes are saved in this browser — use Export to publish to everyone.
+            Default passcode <b>royal</b>. Apps are saved live to Cloudflare KV.
         </p>
     </div>
 </div>
@@ -313,7 +313,7 @@
                 </div>
                 <div class="panel">
                     <h2>Published Apps</h2>
-                    <p class="small">Apps are saved in this browser. Click <b>Export apps.json</b> and commit it (or send it to me) to publish to every visitor.</p>
+                    <p class="small">Apps are saved live to Cloudflare KV. Export is only for backup.</p>
                     <div class="export-row">
                         <button class="ghost" onclick="exportApps()">Export apps.json</button>
                         <button class="ghost" onclick="copyApps()">Copy JSON</button>
@@ -379,9 +379,8 @@
     const loginError = document.getElementById("loginError");
     const successMessage = document.getElementById("successMessage");
     const errorMessage = document.getElementById("errorMessage");
-    const STORAGE_KEY = "royalApps";
+
     const SETTINGS_KEY = "royalSettings";
-    const ADMIN_PASSCODE = "royal";
 
     const DEFAULT_SETTINGS = {
         title: "Royal",
@@ -394,11 +393,11 @@
 
     let apps = [];
     let settings = Object.assign({}, DEFAULT_SETTINGS);
-    let iconData = "";   // data URL for app icon
-    let bannerData = ""; // data URL for carousel banner
-    let screenshotData = []; // array of data URLs for app screenshots
+    let adminPassword = sessionStorage.getItem("royalAdminPassword") || "";
+    let iconData = "";
+    let bannerData = "";
+    let screenshotData = [];
 
-    /* ---------- helpers ---------- */
     function escapeHtml(text) {
         return String(text || "")
             .replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
@@ -412,30 +411,59 @@
         if (Number.isNaN(int) || full.length !== 6) return "124, 92, 255";
         return `${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}`;
     }
+
     function showMessage(success, message) {
         successMessage.textContent = success ? message : "";
         errorMessage.textContent = success ? "" : message;
     }
-    function persist() { localStorage.setItem(STORAGE_KEY, JSON.stringify(apps)); }
 
-    /* ---------- auth ---------- */
-    function login() {
+    async function apiRequest(method = "GET", payload = null) {
+        const options = {
+            method,
+            headers: {
+                "Content-Type": "application/json",
+                "x-admin-password": adminPassword
+            }
+        };
+        if (payload) options.body = JSON.stringify(payload);
+
+        const response = await fetch("/api/apps", options);
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || `API failed: ${response.status}`);
+        }
+
+        return data;
+    }
+
+    async function login() {
         const password = document.getElementById("adminPassword").value.trim();
         if (!password) { loginError.textContent = "Enter admin passcode"; return; }
-        if (password !== ADMIN_PASSCODE) { loginError.textContent = "Wrong admin passcode"; return; }
-        loginError.textContent = "";
-        sessionStorage.setItem("royalAdmin", "1");
-        loginScreen.style.display = "none";
-        dashboard.style.display = "block";
-        loadSettings();
-        loadApps();
+
+        adminPassword = password;
+        try {
+            await apiRequest("GET");
+            sessionStorage.setItem("royalAdminPassword", password);
+            loginError.textContent = "";
+            loginScreen.style.display = "none";
+            dashboard.style.display = "block";
+            loadSettings();
+            await loadApps();
+        } catch (error) {
+            adminPassword = "";
+            sessionStorage.removeItem("royalAdminPassword");
+            loginError.textContent = error.message || "Login failed";
+        }
     }
+
     function logout() {
-        sessionStorage.removeItem("royalAdmin");
+        sessionStorage.removeItem("royalAdminPassword");
+        adminPassword = "";
         dashboard.style.display = "none";
         loginScreen.style.display = "flex";
     }
-    /* ---------- tabs ---------- */
+
     function switchTab(name) {
         const isApps = name === "apps";
         document.getElementById("tabApps").style.display = isApps ? "block" : "none";
@@ -443,7 +471,7 @@
         document.getElementById("tabAppsBtn").classList.toggle("active", isApps);
         document.getElementById("tabSettingsBtn").classList.toggle("active", !isApps);
     }
-    /* ---------- image upload (resize on canvas, store as data URL) ---------- */
+
     function handleImage(event, kind) {
         const file = event.target.files && event.target.files[0];
         if (!file) return;
@@ -469,15 +497,17 @@
         };
         reader.readAsDataURL(file);
     }
+
     function setThumb(id, dataUrl) {
         const el = document.getElementById(id);
         el.innerHTML = dataUrl ? `<img src="${dataUrl}" alt="">` : (id === "bannerThumb" ? "🖼" : "★");
     }
+
     function clearImage(kind) {
         if (kind === "banner") { bannerData = ""; setThumb("bannerThumb", ""); }
         else { iconData = ""; setThumb("iconThumb", ""); }
     }
-    /* ---------- screenshots (multiple) ---------- */
+
     function handleScreens(event) {
         const files = Array.from(event.target.files || []);
         files.forEach(file => {
@@ -504,6 +534,7 @@
         });
         event.target.value = "";
     }
+
     function renderShotThumbs() {
         const el = document.getElementById("shotThumbs");
         el.innerHTML = "";
@@ -518,33 +549,28 @@
             el.appendChild(d);
         });
     }
+
     function removeScreen(i) {
         screenshotData.splice(i, 1);
         renderShotThumbs();
     }
-    /* ---------- apps data ---------- */
+
     async function loadApps() {
         try {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                apps = Array.isArray(parsed) ? parsed : [];
-            } else {
-                const response = await fetch("apps.json", { cache: "no-store" });
-                const data = await response.json();
-                apps = (data && data.apps) || [];
-                persist();
-            }
+            const data = await apiRequest("GET");
+            apps = data.apps || [];
             renderApps();
         } catch (error) {
-            apps = [];
-            renderApps();
+            document.getElementById("appsList").innerHTML = `<p class="small">Failed to load apps: ${escapeHtml(error.message)}</p>`;
         }
     }
-    function saveApp() {
+
+    async function saveApp() {
         const editId = document.getElementById("editId").value;
         const existing = editId ? apps.find(a => a.id === editId) : null;
+
         const payload = {
+            id: editId || undefined,
             name: document.getElementById("appName").value.trim(),
             version: document.getElementById("appVersion").value.trim(),
             icon: document.getElementById("appIcon").value.trim(),
@@ -557,23 +583,23 @@
             releaseNotes: document.getElementById("appNotes").value.trim(),
             downloadUrl: document.getElementById("appDownload").value.trim()
         };
+
         if (!payload.name || !payload.version || !payload.description || !payload.downloadUrl) {
             showMessage(false, "Fill app name, version, description, and download link.");
             return;
         }
-        if (editId && existing) {
-            const index = apps.findIndex(item => item.id === editId);
-            apps[index] = Object.assign({}, existing, payload, { id: editId });
-        } else {
-            payload.id = "app-" + Date.now().toString(36);
-            apps.push(payload);
-        }
 
-        persist();
-        clearForm();
-        renderApps();
-        showMessage(true, editId ? "App updated." : "App published.");
+        try {
+            const data = await apiRequest(editId ? "PUT" : "POST", payload);
+            apps = data.apps || [];
+            clearForm();
+            renderApps();
+            showMessage(true, editId ? "App updated live." : "App published live.");
+        } catch (error) {
+            showMessage(false, error.message);
+        }
     }
+
     function editApp(id) {
         const app = apps.find(item => item.id === id);
         if (!app) return;
@@ -595,20 +621,32 @@
         renderShotThumbs();
         window.scrollTo({ top: 0, behavior: "smooth" });
     }
-    function deleteApp(id) {
-        if (!confirm("Delete this app from the website?")) return;
-        apps = apps.filter(item => item.id !== id);
-        persist();
-        renderApps();
-        showMessage(true, "App deleted.");
+
+    async function deleteApp(id) {
+        if (!confirm("Delete this app from the live website?")) return;
+        try {
+            const data = await apiRequest("DELETE", { id });
+            apps = data.apps || [];
+            renderApps();
+            showMessage(true, "App deleted live.");
+        } catch (error) {
+            showMessage(false, error.message);
+        }
     }
-    function toggleFeatured(id) {
+
+    async function toggleFeatured(id) {
         const app = apps.find(a => a.id === id);
         if (!app) return;
-        app.featured = !app.featured;
-        persist();
-        renderApps();
+        const updated = Object.assign({}, app, { featured: !app.featured });
+        try {
+            const data = await apiRequest("PUT", updated);
+            apps = data.apps || [];
+            renderApps();
+        } catch (error) {
+            showMessage(false, error.message);
+        }
     }
+
     function clearForm() {
         document.getElementById("formTitle").textContent = "Add New App";
         document.getElementById("editId").value = "";
@@ -625,6 +663,7 @@
         screenshotData = [];
         renderShotThumbs();
     }
+
     function renderApps() {
         const appsList = document.getElementById("appsList");
         appsList.innerHTML = "";
@@ -635,9 +674,7 @@
         apps.forEach(app => {
             const item = document.createElement("div");
             item.className = "app-item";
-            const ic = app.image
-                ? `<img src="${escapeHtml(app.image)}" alt="">`
-                : escapeHtml(app.icon || "★");
+            const ic = app.image ? `<img src="${escapeHtml(app.image)}" alt="">` : escapeHtml(app.icon || "★");
             const shotN = Array.isArray(app.screenshots) ? app.screenshots.length : 0;
             const tags = [];
             if (app.featured) tags.push('<span class="badge">In slideshow</span>');
@@ -649,16 +686,16 @@
                     <h3>${escapeHtml(app.name)} ${tags.join(" ")}</h3>
                     <div class="meta">v${escapeHtml(app.version)} — ${escapeHtml(app.description)}</div>
                     <div class="app-actions">
-                        <button class="ghost" onclick="editApp('${app.id}')">Edit</button>
-                        <button class="ghost" onclick="toggleFeatured('${app.id}')">${app.featured ? 'Remove from slideshow' : 'Add to slideshow'}</button>
-                        <button class="danger" onclick="deleteApp('${app.id}')">Delete</button>
+                        <button class="ghost" onclick="editApp('${escapeHtml(app.id)}')">Edit</button>
+                        <button class="ghost" onclick="toggleFeatured('${escapeHtml(app.id)}')">${app.featured ? 'Remove from slideshow' : 'Add to slideshow'}</button>
+                        <button class="danger" onclick="deleteApp('${escapeHtml(app.id)}')">Delete</button>
                     </div>
                 </div>
             `;
             appsList.appendChild(item);
         });
     }
-    /* ---------- export apps ---------- */
+
     function download(filename, text, type) {
         const blob = new Blob([text], { type: type || "application/json" });
         const url = URL.createObjectURL(blob);
@@ -667,19 +704,21 @@
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
         URL.revokeObjectURL(url);
     }
+
     function exportApps() {
         download("apps.json", JSON.stringify({ apps }, null, 2));
-        showMessage(true, "Downloaded apps.json. Commit it (or send it to me) to publish to everyone.");
+        showMessage(true, "Downloaded backup apps.json.");
     }
+
     async function copyApps() {
         try {
             await navigator.clipboard.writeText(JSON.stringify({ apps }, null, 2));
-            showMessage(true, "apps.json copied to clipboard.");
+            showMessage(true, "apps JSON copied to clipboard.");
         } catch (error) {
             showMessage(false, "Could not copy. Use Export instead.");
         }
     }
-    /* ---------- settings ---------- */
+
     function loadSettings() {
         try {
             const raw = localStorage.getItem(SETTINGS_KEY);
@@ -696,6 +735,7 @@
         document.getElementById("setFooter").value = settings.footer;
         applyAccentPreview(settings.accent);
     }
+
     function syncAccent(source) {
         const colorEl = document.getElementById("setAccentColor");
         const hexEl = document.getElementById("setAccentHex");
@@ -706,10 +746,12 @@
         }
         applyAccentPreview(colorEl.value);
     }
+
     function applyAccentPreview(hex) {
         document.documentElement.style.setProperty("--accent", hex);
         document.documentElement.style.setProperty("--accent-rgb", hexToRgb(hex));
     }
+
     function saveSettings() {
         const accent = document.getElementById("setAccentColor").value;
         settings = {
@@ -722,21 +764,23 @@
         };
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
         applyAccentPreview(accent);
-        document.getElementById("settingsMessage").textContent = "Settings saved. Use Export settings.json to publish to everyone.";
+        document.getElementById("settingsMessage").textContent = "Settings saved in this browser. Export settings.json if you want to deploy them globally.";
     }
+
     function exportSettings() {
         saveSettings();
         download("settings.json", JSON.stringify(settings, null, 2));
-        document.getElementById("settingsMessage").textContent = "Downloaded settings.json. Commit it (or send it to me) to publish.";
+        document.getElementById("settingsMessage").textContent = "Downloaded settings.json backup.";
     }
+
     function resetSettings() {
         settings = Object.assign({}, DEFAULT_SETTINGS);
         localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
         loadSettings();
         document.getElementById("settingsMessage").textContent = "Settings reset to default.";
     }
-    /* ---------- init ---------- */
-    if (sessionStorage.getItem("royalAdmin") === "1") {
+
+    if (adminPassword) {
         loginScreen.style.display = "none";
         dashboard.style.display = "block";
         loadSettings();
